@@ -19,17 +19,25 @@ When running long-duration scripts, it's crucial to provide visual feedback to t
 
 `pbar` accepts `current` and `total` as positional arguments, and uses flags for customization.
 
-### Global Flags
+### Advanced Features
 
-*   **`-width`**: Specifies the width of the progress bar (default: 40).
-*   **`-style`**: Sets the style of the progress bar. Available: `classic`, `block`, `spinner`, `arrow`, `braille`, `custom` (default: `classic`).
-*   **`-indeterminate`**: Renders an animated spinner without a percentage, for tasks where the total is unknown.
-*   **`-colorbar`**: Sets the color for the progress bar itself (e.g., `green`, `red`). Available colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`.
-*   **`-colortext`**: Sets the color for the text (percentage, ETA, throughput) (e.g., `yellow`, `blue`). Available colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`.
-*   **`-finished`**: Renders the bar in a completed state (e.g., `[✔] 100%`).
-*   **`-quiet`**: Outputs only the percentage, useful for piping into other tools.
-*   **`-chars`**: Custom characters for the progress bar (e.g., `#=`). Requires `--style=custom`.
-*   **`-version`**: Prints version information and exits.
+- **Color Support**: Allows users to set colors for the bar, background, and text for a high-impact visual style.
+    - **Example**: `pbar 75 100 --color-bar=green --color-text=yellow`
+- **Finished State**: Defines a distinct appearance for the bar upon completion (e.g., a checkmark and a solid color) to provide clear visual confirmation.
+    - **Example**: On completion, the bar could change to `[✔] Download Complete! 100%`.
+- **Indeterminate Mode**: For tasks where the total is unknown, a special mode displays an animated indicator (e.g., a spinner) without a percentage.
+    - **Example**: `my_command | pbar --indeterminate`
+- **Parallel Mode**: Supports rendering multiple progress bars simultaneously, each updated via a stream of JSON objects from standard input. This is ideal for orchestrating complex, concurrent tasks.
+    - **Usage**: Activate with the `--parallel` flag. Input is a stream of JSON objects, one per line, each representing an update for a specific bar.
+    - **Example Input (JSON per line)**:
+        ```json
+        {"id": "task1", "current": 10, "total": 100, "message": "Processing task 1..."}
+        {"id": "task2", "current": 25, "total": 50, "style": "block", "colorBar": "blue"}
+        {"id": "task1", "current": 20, "total": 100}
+        {"id": "task2", "finished": true, "message": "Task 2 complete!"}
+        ```
+
+### Panel of Styles
 
 ## Installation
 

@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/gregory-chatelier/pbar/pbar"
@@ -42,6 +46,7 @@ func main() {
 	var version bool
 	var quiet bool
 	var customChars string
+	var parallel bool // Declare parallel flag here
 
 	// Define flags
 	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
@@ -53,6 +58,26 @@ func main() {
 	flag.BoolVar(&version, "version", false, "Print version information")
 	flag.BoolVar(&quiet, "quiet", false, "Output only the percentage")
 	flag.StringVar(&customChars, "chars", "", "Custom characters for the progress bar (e.g., '#=')")
+	flag.BoolVar(&parallel, "parallel", false, "Enable parallel progress bar rendering")
+
+	// Custom usage function for man-page style help
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [current] [total] [flags]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\n%s is a command-line tool that makes it easy to add progress bars to any Bash or Zsh script.\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\nFlags:\n")
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nExamples:\n")
+		fmt.Fprintf(os.Stderr, "  # Basic usage: 25%% complete out of 100\n")
+		fmt.Fprintf(os.Stderr, "  %s 25 100\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\n  # Using a block style bar with custom width\n")
+		fmt.Fprintf(os.Stderr, "  %s 50 100 --style=block --width=20\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\n  # Indeterminate spinner\n")
+		fmt.Fprintf(os.Stderr, "  %s --indeterminate\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\n  # Quiet mode (output only percentage) for scripting\n")
+		fmt.Fprintf(os.Stderr, "  %s 75 100 --quiet\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\n  # Custom characters and colors\n")
+		fmt.Fprintf(os.Stderr, "  %s 60 100 --style=custom --chars='#-' --colorbar=green --colortext=yellow\n", os.Args[0])
+	}
 
 	// Custom usage function for man-page style help
 	flag.Usage = func() {
@@ -75,14 +100,56 @@ func main() {
 
 	flag.Parse()
 
-	// If no positional arguments are provided, print usage and exit
-	if flag.NArg() == 0 {
-		flag.Usage()
+	// If version flag is set, print version and exit
+	if version {
+		fmt.Println(Version)
 		os.Exit(0)
 	}
 
-	if version {
-		fmt.Println(Version)
+	// If parallel mode is enabled
+	if parallel {
+		manager := pbar.NewManager()
+
+		// Hide cursor
+		fmt.Print("\033[?25l")
+
+		// Handle Ctrl+C to show cursor and clear lines before exiting
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+		go func() {
+			<-c
+			manager.Clear()
+			fmt.Print("\033[?25h") // Show cursor
+			os.Exit(0)
+		}()
+
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			line := scanner.Bytes()
+			var update pbar.Update
+			err := json.Unmarshal(line, &update)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error parsing JSON: %v\n", err)
+				continue
+			}
+			manager.UpdateBar(update)
+			manager.RenderAll()
+		}
+
+		if err := scanner.Err(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading from stdin: %v\n", err)
+		}
+
+		manager.Clear()
+		fmt.Print("\033[?25h") // Show cursor
+		return
+	}
+
+	// --- Single bar mode (existing logic) ---
+
+	// If no positional arguments are provided, print usage and exit
+	if flag.NArg() == 0 {
+		flag.Usage()
 		os.Exit(0)
 	}
 

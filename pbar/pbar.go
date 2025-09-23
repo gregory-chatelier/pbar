@@ -51,6 +51,7 @@ type Bar struct {
 	LastUpdateTime    time.Time
 	ThroughputHistory []float64
 	CustomChars       string
+	Message           string
 	spinnerState      int
 }
 
@@ -130,6 +131,10 @@ func (b *Bar) Render() string {
 			}
 		}
 		metadataString = fmt.Sprintf(" Elapsed %s%s%s", elapsedTimeStr, throughputStr, etaStr)
+	}
+
+	if b.Message != "" {
+		metadataString = fmt.Sprintf("%s %s", metadataString, b.Message)
 	}
 
 	if b.Finished {
