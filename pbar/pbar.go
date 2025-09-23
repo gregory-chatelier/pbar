@@ -1,9 +1,16 @@
 package pbar
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+)
+
+const (
+	maxThroughputHistorySize = 10
+	defaultStyle             = "classic"
+	defaultWidth             = 50
 )
 
 var spinnerChars = []string{"|", "/", "-", "\\"}
@@ -18,6 +25,15 @@ var brailleChars = []string{
 	"⠿", // 6/8
 	"⡿", // 7/8
 	"⣿", // 8/8
+}
+
+var validStyles = map[string]bool{
+	"classic": true,
+	"block":   true,
+	"spinner": true,
+	"arrow":   true,
+	"braille": true,
+	"custom":  true,
 }
 
 // Bar represents a progress bar.
@@ -42,6 +58,11 @@ type Bar struct {
 func (b *Bar) Render() string {
 	// Update LastUpdateTime
 	b.LastUpdateTime = time.Now()
+
+	// Ensure Total is not negative
+	if b.Total < 0 {
+		b.Total = 0
+	}
 
 	percent := float64(b.Current) / float64(b.Total)
 
@@ -86,7 +107,7 @@ func (b *Bar) Render() string {
 
 			// Update throughput history (simple moving average for now)
 			b.ThroughputHistory = append(b.ThroughputHistory, currentThroughput)
-			if len(b.ThroughputHistory) > 10 { // Keep last 10 samples
+			if len(b.ThroughputHistory) > maxThroughputHistorySize { // Keep last 10 samples
 				b.ThroughputHistory = b.ThroughputHistory[1:]
 			}
 
@@ -122,8 +143,8 @@ func (b *Bar) Render() string {
 	}
 
 	style := b.Style
-	if style == "" {
-		style = "classic"
+	if _, ok := validStyles[style]; !ok {
+		style = defaultStyle
 	}
 
 	var barString string
@@ -163,6 +184,16 @@ func (b *Bar) Render() string {
 }
 
 func (b *Bar) renderBar(filledChar, emptyChar, colorCode string) string {
+	// Ensure Total is not negative
+	if b.Total < 0 {
+		b.Total = 0
+	}
+
+	// If width is 0 or negative, return an empty bar
+	if b.Width <= 0 {
+		return "[]"
+	}
+
 	percent := float64(b.Current) / float64(b.Total)
 
 	// Handle total being zero to prevent NaN or Inf
@@ -199,6 +230,16 @@ func (b *Bar) renderBar(filledChar, emptyChar, colorCode string) string {
 }
 
 func (b *Bar) renderArrowBar(colorCode string) string {
+	// Ensure Total is not negative
+	if b.Total < 0 {
+		b.Total = 0
+	}
+
+	// If width is 0 or negative, return an empty bar
+	if b.Width <= 0 {
+		return "[]"
+	}
+
 	percent := float64(b.Current) / float64(b.Total)
 	// Handle total being zero to prevent NaN or Inf
 	if b.Total == 0 {
@@ -238,6 +279,16 @@ func (b *Bar) renderArrowBar(colorCode string) string {
 }
 
 func (b *Bar) renderBrailleBar(colorCode string) string {
+	// Ensure Total is not negative
+	if b.Total < 0 {
+		b.Total = 0
+	}
+
+	// If width is 0 or negative, return an empty bar
+	if b.Width <= 0 {
+		return "[]"
+	}
+
 	percent := float64(b.Current) / float64(b.Total)
 	// Handle total being zero to prevent NaN or Inf
 	if b.Total == 0 {
@@ -296,4 +347,20 @@ func formatDuration(d time.Duration) string {
 		return fmt.Sprintf("%dm%ds", minutes, remainingSeconds)
 	}
 	return fmt.Sprintf("%ds", remainingSeconds)
+}
+
+func (b *Bar) Validate() error {
+	if b.Width <= 0 {
+		return errors.New("width must be positive")
+	}
+	if !validStyles[b.Style] {
+		return fmt.Errorf("invalid style: %s", b.Style)
+	}
+	return nil
+}
+
+type ProgressBar interface {
+	Render() string
+	Update(current int)
+	Finish()
 }
