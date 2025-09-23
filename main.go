@@ -13,6 +13,22 @@ import (
 // Version is set at build time
 var Version = "v0.0.1-dev"
 
+const (
+	defaultWidth = 40
+	defaultStyle = "classic"
+	defaultTotal = 100
+)
+
+func isValidStyle(style string) bool {
+	validStyles := []string{"classic", "block", "spinner", "arrow", "braille", "custom"}
+	for _, s := range validStyles {
+		if s == style {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	startTime := time.Now()
 
@@ -28,8 +44,8 @@ func main() {
 	var customChars string
 
 	// Define flags
-	flag.IntVar(&width, "width", 40, "Width of the progress bar")
-	flag.StringVar(&style, "style", "classic", "Style of the progress bar (classic, block, spinner, arrow, braille, custom)")
+	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
+	flag.StringVar(&style, "style", defaultStyle, "Style of the progress bar (classic, block, spinner, arrow, braille, custom)")
 	flag.BoolVar(&indeterminate, "indeterminate", false, "Render an indeterminate spinner")
 	flag.StringVar(&colorBarName, "colorbar", "", fmt.Sprintf("Color for the bar. Available: %s", pbar.GetAvailableColors()))
 	flag.StringVar(&colorTextName, "colortext", "", fmt.Sprintf("Color for the text. Available: %s", pbar.GetAvailableColors()))
@@ -87,9 +103,15 @@ func main() {
 	} else if flag.NArg() == 0 {
 		// Default values if no positional arguments are provided
 		current = 0
-		total = 100
+		total = defaultTotal
 	} else {
 		fmt.Fprintln(os.Stderr, "Error: When using positional arguments, provide both current and total values, or neither.")
+		os.Exit(1)
+	}
+
+	// Validate style
+	if !isValidStyle(style) {
+		fmt.Fprintf(os.Stderr, "Error: Invalid style '%s'. Must be one of: classic, block, spinner, arrow, braille, custom\n", style)
 		os.Exit(1)
 	}
 
@@ -116,6 +138,11 @@ func main() {
 	// Exit with an error code if current > total (unless finished or indeterminate)
 	if !finished && !indeterminate && current > total {
 		fmt.Fprintln(os.Stderr, "Error: Current value cannot be greater than total.")
+		os.Exit(1)
+	}
+
+	if width <= 0 {
+		fmt.Fprintf(os.Stderr, "Error: Width must be positive\n")
 		os.Exit(1)
 	}
 }

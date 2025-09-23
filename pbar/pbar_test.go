@@ -454,14 +454,6 @@ func TestSmartMetadataEdgeCases(t *testing.T) {
 		}
 	})
 
-	// t.Run("ETA with zero throughput", func(t *testing.T) {
-	// 	bar := &Bar{Total: 100, Current: 50, Width: 10}
-	// 	bar.StartTime = time.Now() // Set start time immediately before render
-	// 	actual := bar.Render()
-	// 	if !strings.Contains(actual, "ETA") { t.Errorf("Expected ETA, got '%s'", actual) }
-	// 	if !strings.Contains(actual, "Inf") && !strings.Contains(actual, "0s") { t.Errorf("Expected ETA to be Inf or 0s, got '%s'", actual) }
-	// })
-
 	t.Run("ETA with current equals total", func(t *testing.T) {
 		startTime := time.Now().Add(-time.Second) // Ensure non-zero elapsed time
 		bar := &Bar{Total: 100, Current: 100, Width: 10, StartTime: startTime}
@@ -469,6 +461,95 @@ func TestSmartMetadataEdgeCases(t *testing.T) {
 		actual := bar.Render()
 		if !strings.Contains(actual, "ETA 0s") {
 			t.Errorf("Expected ETA 0s, got '%s'", actual)
+		}
+	})
+}
+
+func TestInvalidInputs(t *testing.T) {
+	t.Run("negative current", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: -10, Width: 10}
+		expected := "[----------] 0%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("negative total", func(t *testing.T) {
+		bar := &Bar{Total: -100, Current: 50, Width: 10}
+		expected := "[##########] 100%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("negative width", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 50, Width: -10}
+		expected := "[] 50%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("invalid style", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 50, Width: 10, Style: "invalid"}
+		expected := "[#####-----] 50%" // devrait utiliser le style par défaut
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+}
+
+func TestLargeNumbers(t *testing.T) {
+	t.Run("very large numbers", func(t *testing.T) {
+		bar := &Bar{
+			Total:   1<<31 - 1, // max int32
+			Current: 1 << 30,   // half of max int32
+			Width:   10,
+		}
+		expected := "[#####-----] 50%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+}
+
+func TestThroughputHistory(t *testing.T) {
+	t.Run("throughput history size limit", func(t *testing.T) {
+		bar := &Bar{
+			Total:     100,
+			Current:   50,
+			Width:     10,
+			StartTime: time.Now().Add(-10 * time.Second),
+		}
+
+		// Remplir l'historique avec plus de 10 valeurs
+		for i := 0; i < 15; i++ {
+			bar.Render()
+			time.Sleep(100 * time.Millisecond)
+		}
+
+		if len(bar.ThroughputHistory) > 10 {
+			t.Errorf("Throughput history exceeded limit of 10, got %d", len(bar.ThroughputHistory))
+		}
+	})
+}
+
+func TestLongDurations(t *testing.T) {
+	t.Run("very long elapsed time", func(t *testing.T) {
+		bar := &Bar{
+			Total:     100,
+			Current:   50,
+			Width:     10,
+			StartTime: time.Now().Add(-24 * 30 * time.Hour), // ~1 month ago
+		}
+		actual := bar.Render()
+		if !strings.Contains(actual, "720h") {
+			t.Errorf("Expected to show hours for long duration, got '%s'", actual)
 		}
 	})
 }
