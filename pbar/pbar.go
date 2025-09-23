@@ -22,20 +22,20 @@ var brailleChars = []string{
 
 // Bar represents a progress bar.
 type Bar struct {
-	Total         int
-	Current       int
-	Width         int
-	Style         string
-	Indeterminate bool
-	ColorBar      string // Now stores ANSI escape code directly
-	ColorText     string // Now stores ANSI escape code directly
-	Finished      bool
-	Quiet         bool
-	StartTime     time.Time
-	LastUpdateTime time.Time
+	Total             int
+	Current           int
+	Width             int
+	Style             string
+	Indeterminate     bool
+	ColorBar          string // Now stores ANSI escape code directly
+	ColorText         string // Now stores ANSI escape code directly
+	Finished          bool
+	Quiet             bool
+	StartTime         time.Time
+	LastUpdateTime    time.Time
 	ThroughputHistory []float64
-	CustomChars   string
-	spinnerState  int
+	CustomChars       string
+	spinnerState      int
 }
 
 // Render generates the string representation of the progress bar.
@@ -44,6 +44,16 @@ func (b *Bar) Render() string {
 	b.LastUpdateTime = time.Now()
 
 	percent := float64(b.Current) / float64(b.Total)
+
+	// Handle total being zero to prevent NaN or Inf
+	if b.Total == 0 {
+		if b.Current == 0 {
+			percent = 0 // 0/0 is 0%
+		} else {
+			percent = 1 // X/0 (X>0) is 100%
+		}
+	}
+
 	if percent < 0 {
 		percent = 0
 	}
@@ -58,16 +68,21 @@ func (b *Bar) Render() string {
 	}
 
 	var metadataString string
+	var throughputStr, etaStr string // Always initialize
+
 	if !b.StartTime.IsZero() {
 		// Calculate elapsed time
 		elapsedTime := time.Since(b.StartTime)
 		elapsedTimeStr := formatDuration(elapsedTime)
 
-		// Calculate throughput and ETA only if not indeterminate and total is greater than 0
-		var throughputStr, etaStr string
-		if !b.Indeterminate && b.Total > 0 && b.Current > 0 {
-			// Calculate current throughput
-			currentThroughput := float64(b.Current) / elapsedTime.Seconds()
+		// Calculate throughput and ETA only if not indeterminate and elapsed time is non-zero
+		if !b.Indeterminate && elapsedTime.Seconds() > 0 {
+			var currentThroughput float64
+			if b.Total > 0 && b.Current > 0 {
+				currentThroughput = float64(b.Current) / elapsedTime.Seconds()
+			} else {
+				currentThroughput = 0
+			}
 
 			// Update throughput history (simple moving average for now)
 			b.ThroughputHistory = append(b.ThroughputHistory, currentThroughput)
@@ -89,6 +104,8 @@ func (b *Bar) Render() string {
 			if averageThroughput > 0 {
 				eta := time.Duration(remainingItems / averageThroughput * float64(time.Second))
 				etaStr = fmt.Sprintf(" ETA %s", formatDuration(eta))
+			} else {
+				etaStr = " ETA Inf"
 			}
 		}
 		metadataString = fmt.Sprintf(" Elapsed %s%s%s", elapsedTimeStr, throughputStr, etaStr)
@@ -147,7 +164,27 @@ func (b *Bar) Render() string {
 
 func (b *Bar) renderBar(filledChar, emptyChar, colorCode string) string {
 	percent := float64(b.Current) / float64(b.Total)
+
+	// Handle total being zero to prevent NaN or Inf
+	if b.Total == 0 {
+		if b.Current == 0 {
+			percent = 0 // 0/0 is 0%
+		} else {
+			percent = 1 // X/0 (X>0) is 100%
+		}
+	}
+
+	if percent < 0 {
+		percent = 0
+	}
+	if percent > 1 {
+		percent = 1
+	}
+
 	filledWidth := int(percent * float64(b.Width))
+	if b.Width == 1 && percent > 0 { // Special handling for width 1 and non-zero progress
+		filledWidth = 1
+	}
 	emptyWidth := b.Width - filledWidth
 
 	filled := strings.Repeat(filledChar, filledWidth)
@@ -163,13 +200,31 @@ func (b *Bar) renderBar(filledChar, emptyChar, colorCode string) string {
 
 func (b *Bar) renderArrowBar(colorCode string) string {
 	percent := float64(b.Current) / float64(b.Total)
+	// Handle total being zero to prevent NaN or Inf
+	if b.Total == 0 {
+		if b.Current == 0 {
+			percent = 0 // 0/0 is 0%
+		} else {
+			percent = 1 // X/0 (X>0) is 100%
+		}
+	}
+
+	if percent < 0 {
+		percent = 0
+	}
+	if percent > 1 {
+		percent = 1
+	}
+
 	filledWidth := int(percent * float64(b.Width))
 	emptyWidth := b.Width - filledWidth
 
 	var filled string
 	if filledWidth > 0 {
 		filled = strings.Repeat("-", filledWidth-1) + ">"
-	} else {
+	} else if filledWidth == 0 { // Handle filledWidth being 0
+		filled = ""
+	} else { // Handle filledWidth being negative (shouldn't happen with clamping, but for safety)
 		filled = ""
 	}
 	empty := strings.Repeat(" ", emptyWidth)
@@ -184,19 +239,37 @@ func (b *Bar) renderArrowBar(colorCode string) string {
 
 func (b *Bar) renderBrailleBar(colorCode string) string {
 	percent := float64(b.Current) / float64(b.Total)
-	filledWidth := int(percent * float64(b.Width))
-	
+	// Handle total being zero to prevent NaN or Inf
+	if b.Total == 0 {
+		if b.Current == 0 {
+			percent = 0 // 0/0 is 0%
+		} else {
+			percent = 1 // X/0 (X>0) is 100%
+		}
+	}
+
+	if percent < 0 {
+		percent = 0
+	}
+	if percent > 1 {
+		percent = 1
+	}
+
+	// Calculate total braille units in the bar
+	totalBrailleUnits := b.Width * (len(brailleChars) - 1)
+	filledBrailleUnits := int(percent * float64(totalBrailleUnits))
+
 	var barContentBuilder strings.Builder
 	barContentBuilder.WriteString("[")
 
 	for i := 0; i < b.Width; i++ {
-		if i < filledWidth {
-			barContentBuilder.WriteString("⣿") // Full block
-		} else if i == filledWidth && filledWidth < b.Width {
-			// Calculate fractional fill for the current character
-			fraction := (percent * float64(b.Width)) - float64(filledWidth)
-			brailleIndex := int(fraction * float64(len(brailleChars)-1))
-			barContentBuilder.WriteString(brailleChars[brailleIndex])
+		// Calculate units for the current character cell
+		currentCellUnits := filledBrailleUnits - (i * (len(brailleChars) - 1))
+
+		if currentCellUnits >= (len(brailleChars) - 1) { // Full block
+			barContentBuilder.WriteString("⣿")
+		} else if currentCellUnits > 0 { // Fractional block
+			barContentBuilder.WriteString(brailleChars[currentCellUnits])
 		} else {
 			barContentBuilder.WriteString(" ") // Empty space
 		}

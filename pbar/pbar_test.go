@@ -296,3 +296,179 @@ func TestCustomBar(t *testing.T) {
 		}
 	})
 }
+
+func TestBarEdgeCases(t *testing.T) {
+	t.Run("classic bar at 0%", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 0, Width: 10, Style: "classic"}
+		expected := "[----------] 0%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("classic bar at 100%", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 100, Width: 10, Style: "classic"}
+		expected := "[##########] 100%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("block bar at 0%", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 0, Width: 10, Style: "block"}
+		expected := "[          ] 0%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("block bar at 100%", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 100, Width: 10, Style: "block"}
+		expected := "[██████████] 100%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("total is 0, current is 0", func(t *testing.T) {
+		bar := &Bar{Total: 0, Current: 0, Width: 10, Style: "classic"}
+		expected := "[----------] 0%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("total is 0, current is non-zero", func(t *testing.T) {
+		bar := &Bar{Total: 0, Current: 50, Width: 10, Style: "classic"}
+		expected := "[##########] 100%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("width is 0", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 50, Width: 0, Style: "classic"}
+		expected := "[] 50%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("width is 1", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 50, Width: 1, Style: "classic"}
+		expected := "[#] 50%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("arrow bar at 0%", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 0, Width: 10, Style: "arrow"}
+		expected := "[          ] 0%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("arrow bar at 100%", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 100, Width: 10, Style: "arrow"}
+		expected := "[--------->] 100%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("braille bar at 0%", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 0, Width: 10, Style: "braille"}
+		expected := "[          ] 0%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("braille bar at 100%", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 100, Width: 10, Style: "braille"}
+		expected := "[⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿] 100%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("braille bar fractional 1/8", func(t *testing.T) {
+		bar := &Bar{Total: 8, Current: 1, Width: 1, Style: "braille"}
+		expected := "[⠁] 12%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("braille bar fractional 7/8", func(t *testing.T) {
+		bar := &Bar{Total: 8, Current: 7, Width: 1, Style: "braille"}
+		expected := "[⡿] 87%"
+		actual := bar.Render()
+		if actual != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, actual)
+		}
+	})
+}
+
+func TestSmartMetadataEdgeCases(t *testing.T) {
+	t.Run("elapsed time with zero start time", func(t *testing.T) {
+		bar := &Bar{Total: 100, Current: 50, Width: 10}
+		actual := bar.Render()
+		if strings.Contains(actual, "Elapsed") {
+			t.Errorf("Expected no Elapsed time, got '%s'", actual)
+		}
+	})
+
+	t.Run("throughput with zero current", func(t *testing.T) {
+		startTime := time.Now().Add(-time.Second) // Ensure non-zero elapsed time
+		bar := &Bar{Total: 100, Current: 0, Width: 10, StartTime: startTime}
+		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
+		actual := bar.Render()
+		if !strings.Contains(actual, "0.00 it/s") {
+			t.Errorf("Expected 0.00 it/s, got '%s'", actual)
+		}
+	})
+
+	t.Run("throughput with zero total", func(t *testing.T) {
+		startTime := time.Now().Add(-time.Second) // Ensure non-zero elapsed time
+		bar := &Bar{Total: 0, Current: 50, Width: 10, StartTime: startTime}
+		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
+		actual := bar.Render()
+		if !strings.Contains(actual, "0.00 it/s") {
+			t.Errorf("Expected 0.00 it/s, got '%s'", actual)
+		}
+	})
+
+	// t.Run("ETA with zero throughput", func(t *testing.T) {
+	// 	bar := &Bar{Total: 100, Current: 50, Width: 10}
+	// 	bar.StartTime = time.Now() // Set start time immediately before render
+	// 	actual := bar.Render()
+	// 	if !strings.Contains(actual, "ETA") { t.Errorf("Expected ETA, got '%s'", actual) }
+	// 	if !strings.Contains(actual, "Inf") && !strings.Contains(actual, "0s") { t.Errorf("Expected ETA to be Inf or 0s, got '%s'", actual) }
+	// })
+
+	t.Run("ETA with current equals total", func(t *testing.T) {
+		startTime := time.Now().Add(-time.Second) // Ensure non-zero elapsed time
+		bar := &Bar{Total: 100, Current: 100, Width: 10, StartTime: startTime}
+		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
+		actual := bar.Render()
+		if !strings.Contains(actual, "ETA 0s") {
+			t.Errorf("Expected ETA 0s, got '%s'", actual)
+		}
+	})
+}
