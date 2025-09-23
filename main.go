@@ -46,7 +46,8 @@ func main() {
 	var version bool
 	var quiet bool
 	var customChars string
-	var parallel bool // Declare parallel flag here
+	var parallel bool
+	var message string // Declare message flag
 
 	// Define flags
 	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
@@ -59,6 +60,7 @@ func main() {
 	flag.BoolVar(&quiet, "quiet", false, "Output only the percentage")
 	flag.StringVar(&customChars, "chars", "", "Custom characters for the progress bar (e.g., '#=')")
 	flag.BoolVar(&parallel, "parallel", false, "Enable parallel progress bar rendering")
+	flag.StringVar(&message, "message", "", "Optional message to display with the progress bar")
 
 	// Custom usage function for man-page style help
 	flag.Usage = func() {
@@ -198,6 +200,7 @@ func main() {
 		Quiet:         quiet,
 		StartTime:     startTime,
 		CustomChars:   customChars,
+		Message:       message,
 	}
 
 	fmt.Print(bar.Render())

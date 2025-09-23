@@ -1,10 +1,3 @@
-╔═══╗╔═══╗╔═══╗╔═╗ ╔╗
-║╔═╗║║╔═╗║║╔═╗║║║╚╗║║
-║╚══╗║╚═╝║║║ ║║║╔╗╚╝║
-╚══╗║║╔══╝║╚═╝║║║╚╗║║
-║╚═╝║║║   ║╔═╗║║║ ║║║
-╚═══╝╚╝   ╚╝ ╚╝╚╝ ╚═╝
-
 # pbar - Command-line Progress Bar Tool
 
 Add beautiful and informative progress bars to your Bash or Zsh scripts with ease.
@@ -38,6 +31,19 @@ When running long-duration scripts, it's crucial to provide visual feedback to t
         ```
 
 ### Panel of Styles
+
+## Demonstration Script (`demo.sh`)
+
+To see `pbar` in action, including its various styles and the parallel mode, run the `demo.sh` script:
+
+```bash
+bash demo.sh
+```
+
+**Note on Windows Compatibility:** The `demo.sh` script is designed for Unix-like environments (Linux, macOS, WSL, Git Bash). If you are running Git Bash on Windows and encounter `command not found` errors for `pbar.exe`, you might need to adjust your environment. Potential workarounds include:
+
+*   Adding the current directory to your `PATH` temporarily: `export PATH=$PATH:.
+*   Using `winpty` for individual `pbar` calls if your terminal supports it (e.g., `winpty ./pbar.exe 50 100`).
 
 ## Installation
 

@@ -18,8 +18,8 @@ BINARY_NAME=pbar
 all: build
 
 # Build the binary for the current platform
-build: 
-	$(GOBUILD) -o $(BINARY_NAME) .
+build:
+	go build -o pbar main.go
 
 # Run all tests
 test: 
@@ -47,7 +47,7 @@ release:
 
 # Clean up build artifacts
 clean:
-	rm -f $(BINARY_NAME)
+	rm -f pbar.exe
 	rm -rf dist/
 
 # Install the binary
