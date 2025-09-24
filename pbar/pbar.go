@@ -138,13 +138,21 @@ func (b *Bar) Render() string {
 	}
 
 	if b.Finished {
-		return fmt.Sprintf("[✔] 100%%%s", metadataString)
+		result := fmt.Sprintf("[✔] 100%%%s", metadataString)
+		if !b.Quiet {
+			result = "\r" + result
+		}
+		return result
 	}
 
 	if b.Indeterminate {
 		char := spinnerChars[b.spinnerState%len(spinnerChars)]
 		b.spinnerState++
-		return fmt.Sprintf("[%s]%s", char, metadataString)
+		result := fmt.Sprintf("[%s]%s", char, metadataString)
+		if !b.Quiet {
+			result = "\r" + result
+		}
+		return result
 	}
 
 	style := b.Style
@@ -185,7 +193,14 @@ func (b *Bar) Render() string {
 		percentString = fmt.Sprintf("%s%s%s", b.ColorText, percentString, "\x1b[0m") // Use reset code directly
 	}
 
-	return fmt.Sprintf("%s %s%s", barString, percentString, metadataString)
+	result := fmt.Sprintf("%s %s%s", barString, percentString, metadataString)
+	
+	// Add carriage return for inline updates (except in quiet mode)
+	if !b.Quiet {
+		result = "\r" + result
+	}
+	
+	return result
 }
 
 func (b *Bar) renderBar(filledChar, emptyChar, colorCode string) string {
