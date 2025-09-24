@@ -1,12 +1,12 @@
 # pbar - Command-line Progress Bar Tool
 
-Add beautiful and informative progress bars to your Bash or Zsh scripts with ease.
+Add progress bars to your shell scripts with ease
 
 ## Why pbar?
 
 When running long-duration scripts, it's crucial to provide visual feedback to the user. While simple spinners or dots can work, a well-designed progress bar offers a much clearer indication of progress, estimated time remaining, and throughput.
 
-`pbar` simplifies the creation of such progress bars, providing a clean, intuitive, and highly customizable command-line interface. It adheres to the Unix philosophy: do one thing well, and work seamlessly with other tools via pipes.
+`pbar` simplifies the creation of such progress bars, providing a clean, intuitive, and highly customizable command-line interface.
 
 ## Command Reference
 
