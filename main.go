@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -100,6 +101,40 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  %s 60 100 --style=custom --chars='#-' --colorbar=green --colortext=yellow\n", os.Args[0])
 	}
 
+	// Custom parsing to handle flags anywhere in the argument list
+	// Reorder arguments to put all flags first, then positional args
+	args := os.Args[1:]
+	var flags []string
+	var positionalArgs []string
+	
+	// Separate flags from positional arguments
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if strings.HasPrefix(arg, "-") {
+			flags = append(flags, arg)
+			// Check if next argument is a flag value (not starting with -)
+			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+				// Check if this flag expects a value
+				flagName := strings.TrimPrefix(strings.TrimPrefix(arg, "-"), "-")
+				if flagName == "width" || flagName == "style" || flagName == "colorbar" || 
+				   flagName == "colortext" || flagName == "chars" || flagName == "message" {
+					i++ // Move to flag value
+					flags = append(flags, args[i]) // Add flag value
+				}
+			}
+		} else {
+			// This is a positional argument
+			positionalArgs = append(positionalArgs, arg)
+		}
+	}
+
+	// Reconstruct os.Args with flags first, then positional args
+	newArgs := []string{os.Args[0]}
+	newArgs = append(newArgs, flags...)
+	newArgs = append(newArgs, positionalArgs...)
+	os.Args = newArgs
+
+	// Now parse flags normally
 	flag.Parse()
 
 	// If version flag is set, print version and exit
@@ -149,32 +184,29 @@ func main() {
 
 	// --- Single bar mode (existing logic) ---
 
-	// If no positional arguments are provided, print usage and exit
-	if flag.NArg() == 0 {
-		flag.Usage()
-		os.Exit(0)
-	}
-
 	// Handle positional arguments for current and total
 	var current, total int
-	if flag.NArg() == 2 {
+	if len(positionalArgs) == 2 {
 		var err error
-		current, err = strconv.Atoi(flag.Arg(0))
+		current, err = strconv.Atoi(positionalArgs[0])
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: Invalid current value '%s'. Must be an integer.\n", flag.Arg(0))
+			fmt.Fprintf(os.Stderr, "Error: Invalid current value '%s'. Must be an integer.\n", positionalArgs[0])
 			os.Exit(1)
 		}
-		total, err = strconv.Atoi(flag.Arg(1))
+		total, err = strconv.Atoi(positionalArgs[1])
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: Invalid total value '%s'. Must be an integer.\n", flag.Arg(1))
+			fmt.Fprintf(os.Stderr, "Error: Invalid total value '%s'. Must be an integer.\n", positionalArgs[1])
 			os.Exit(1)
 		}
-	} else if flag.NArg() == 0 {
+	} else if len(positionalArgs) == 0 {
 		// Default values if no positional arguments are provided
 		current = 0
 		total = defaultTotal
+	} else if len(positionalArgs) == 1 {
+		fmt.Fprintf(os.Stderr, "Error: When using positional arguments, provide both current and total values. Got only: %s\n", positionalArgs[0])
+		os.Exit(1)
 	} else {
-		fmt.Fprintln(os.Stderr, "Error: When using positional arguments, provide both current and total values, or neither.")
+		fmt.Fprintf(os.Stderr, "Error: Too many positional arguments. Expected 0 or 2, got %d: %v\n", len(positionalArgs), positionalArgs)
 		os.Exit(1)
 	}
 
