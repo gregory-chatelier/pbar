@@ -25,7 +25,7 @@ const (
 )
 
 func isValidStyle(style string) bool {
-	validStyles := []string{"classic", "block", "spinner", "arrow", "braille", "custom"}
+	validStyles := []string{"classic", "block", "spinner", "arrow", "braille", "custom", "braille-spinner"}
 	for _, s := range validStyles {
 		if s == style {
 			return true
@@ -212,8 +212,13 @@ func main() {
 
 	// Validate style
 	if !isValidStyle(style) {
-		fmt.Fprintf(os.Stderr, "Error: Invalid style '%s'. Must be one of: classic, block, spinner, arrow, braille, custom\n", style)
+		fmt.Fprintf(os.Stderr, "Error: Invalid style '%s'. Must be one of: classic, block, spinner, arrow, braille, custom, braille-spinner\n", style)
 		os.Exit(1)
+	}
+
+	// Automatically set indeterminate for spinner styles
+	if style == "spinner" || style == "braille-spinner" {
+		indeterminate = true
 	}
 
 	// Validate and get ANSI color codes

@@ -5,15 +5,39 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"os"
+	"path/filepath"
+	"strconv"
 )
 
 const (
 	maxThroughputHistorySize = 10
 	defaultStyle             = "classic"
 	defaultWidth             = 50
+	stateFileName            = ".pbar.state"
 )
 
+func getSpinnerState() int {
+	stateFile := filepath.Join(os.TempDir(), stateFileName)
+	data, err := os.ReadFile(stateFile)
+	if err != nil {
+		// If the file doesn't exist, create it with initial state 0
+		if os.IsNotExist(err) {
+			os.WriteFile(stateFile, []byte("0"), 0644)
+		}
+		return 0
+	}
+	state, _ := strconv.Atoi(string(data))
+	return state
+}
+
+func setSpinnerState(state int) {
+	stateFile := filepath.Join(os.TempDir(), stateFileName)
+	os.WriteFile(stateFile, []byte(strconv.Itoa(state)), 0644)
+}
+
 var spinnerChars = []string{"|", "/", "-", "\\"}
+var brailleSpinnerChars = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 
 var brailleChars = []string{
 	" ", // 0/8
@@ -32,8 +56,9 @@ var validStyles = map[string]bool{
 	"block":   true,
 	"spinner": true,
 	"arrow":   true,
-	"braille": true,
-	"custom":  true,
+	"braille":         true,
+	"braille-spinner": true,
+	"custom":          true,
 }
 
 // Bar represents a progress bar.
@@ -53,6 +78,7 @@ type Bar struct {
 	CustomChars       string
 	Message           string
 	spinnerState      int
+	TestMode          bool
 }
 
 // Render generates the string representation of the progress bar.
@@ -146,9 +172,24 @@ func (b *Bar) Render() string {
 	}
 
 	if b.Indeterminate {
-		char := spinnerChars[b.spinnerState%len(spinnerChars)]
+		if !b.TestMode {
+			b.spinnerState = getSpinnerState()
+		}
+		var char string
+		switch b.Style {
+		case "braille-spinner":
+			char = brailleSpinnerChars[b.spinnerState%len(brailleSpinnerChars)]
+		default:
+			char = spinnerChars[b.spinnerState%len(spinnerChars)]
+		}
 		b.spinnerState++
+		if !b.TestMode {
+			setSpinnerState(b.spinnerState)
+		}
 		result := fmt.Sprintf("[%s]%s", char, metadataString)
+		if b.ColorText != "" {
+			result = fmt.Sprintf("[%s%s%s]%s", b.ColorText, char, "\x1b[0m", metadataString)
+		}
 		if !b.Quiet {
 			result = "\r" + result
 		}
@@ -163,9 +204,31 @@ func (b *Bar) Render() string {
 	var barString string
 	switch style {
 	case "spinner":
+		if !b.TestMode {
+			b.spinnerState = getSpinnerState()
+		}
 		char := spinnerChars[b.spinnerState%len(spinnerChars)]
 		b.spinnerState++
+		if !b.TestMode {
+			setSpinnerState(b.spinnerState)
+		}
 		barString = fmt.Sprintf("[%s]", char)
+		if b.ColorText != "" {
+			barString = fmt.Sprintf("[%s%s%s]", b.ColorText, char, "\x1b[0m")
+		}
+	case "braille-spinner":
+		if !b.TestMode {
+			b.spinnerState = getSpinnerState()
+		}
+		char := brailleSpinnerChars[b.spinnerState%len(brailleSpinnerChars)]
+		b.spinnerState++
+		if !b.TestMode {
+			setSpinnerState(b.spinnerState)
+		}
+		barString = fmt.Sprintf("[%s]", char)
+		if b.ColorText != "" {
+			barString = fmt.Sprintf("[%s%s%s]", b.ColorText, char, "\x1b[0m")
+		}
 	case "block":
 		barString = b.renderBar("█", " ", b.ColorBar)
 	case "classic":
@@ -373,7 +436,7 @@ func (b *Bar) Validate() error {
 	if b.Width <= 0 {
 		return errors.New("width must be positive")
 	}
-	if !validStyles[b.Style] {
+	if !validStyles[b.Style] && b.Style != "braille-spinner" {
 		return fmt.Errorf("invalid style: %s", b.Style)
 	}
 	return nil

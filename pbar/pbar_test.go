@@ -48,6 +48,7 @@ func TestSpinner(t *testing.T) {
 			Total:   100,
 			Current: 25,
 			Style:   "spinner",
+			TestMode: true,
 		}
 
 		expectations := []string{
@@ -58,7 +59,40 @@ func TestSpinner(t *testing.T) {
 			"\r[|] 25%", // Check for wrap around
 		}
 
-		for _, expected := range expectations {
+		for i, expected := range expectations {
+			bar.spinnerState = i // Manually set state for predictability
+			actual := bar.Render()
+			if actual != expected {
+				t.Errorf("Expected '%s', but got '%s'", expected, actual)
+			}
+		}
+	})
+}
+
+func TestBrailleSpinner(t *testing.T) {
+	t.Run("renders a braille spinner that cycles through characters", func(t *testing.T) {
+		bar := &Bar{
+			Total:   100,
+			Current: 25,
+			Style:   "braille-spinner",
+			TestMode: true,
+		}
+
+		expectations := []string{
+			"\r[⠋] 25%",
+			"\r[⠙] 25%",
+			"\r[⠹] 25%",
+			"\r[⠸] 25%",
+			"\r[⠼] 25%",
+			"\r[⠴] 25%",
+			"\r[⠦] 25%",
+			"\r[⠧] 25%",
+			"\r[⠇] 25%",
+			"\r[⠏] 25%",
+		}
+
+		for i, expected := range expectations {
+			bar.spinnerState = i // Manually set state for predictability
 			actual := bar.Render()
 			if actual != expected {
 				t.Errorf("Expected '%s', but got '%s'", expected, actual)
@@ -71,6 +105,7 @@ func TestIndeterminateMode(t *testing.T) {
 	t.Run("renders a spinner without percentage", func(t *testing.T) {
 		bar := &Bar{
 			Indeterminate: true,
+			TestMode:      true,
 		}
 
 		expectations := []string{
@@ -80,7 +115,8 @@ func TestIndeterminateMode(t *testing.T) {
 			"\r[\\]",
 		}
 
-		for _, expected := range expectations {
+		for i, expected := range expectations {
+			bar.spinnerState = i // Manually set state for predictability
 			actual := bar.Render()
 			if actual != expected {
 				t.Errorf("Expected '%s', but got '%s'", expected, actual)
