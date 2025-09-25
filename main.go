@@ -42,7 +42,6 @@ func main() {
 	var style string
 	var colorBarName string
 	var colorTextName string
-	var finished bool
 	var finishedMessage string
 	var version bool
 	var customChars string
@@ -53,8 +52,7 @@ func main() {
 	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
 	flag.StringVar(&style, "style", defaultStyle, "Style of the progress bar (classic, block, spinner, arrow, braille, custom)")
 	flag.StringVar(&colorBarName, "colorbar", "", fmt.Sprintf("Color for the bar. Available: %s", pbar.GetAvailableColors()))
-	flag.StringVar(&colorTextName, "colortext", "", fmt.Sprintf("Color for the text. Available: %s", pbar.GetAvailableColors()))
-	flag.BoolVar(&finished, "finished", false, "Render a finished state")
+	flag.StringVar(&colorTextName, "colortext", "", fmt.Sprintf("Color for the bar. Available: %s", pbar.GetAvailableColors()))
 	flag.StringVar(&finishedMessage, "finished-message", "", "Message to display when the progress bar is complete")
 	flag.BoolVar(&version, "version", false, "Print version information")
 	flag.StringVar(&customChars, "chars", "", "Custom characters for the progress bar (e.g., '#=')")
@@ -75,7 +73,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "\n  # Message alongside progress\n")
 		fmt.Fprintf(os.Stderr, "  %s 75 100 --message=\"Processing...\"\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n  # Finished state with custom message\n")
-		fmt.Fprintf(os.Stderr, "  %s 100 100 --finished --finished-message=\"Task Complete!\"\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  %s 100 100 --finished-message=\"Task Complete!\"\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n  # Custom characters and colors\n")
 		fmt.Fprintf(os.Stderr, "  %s 60 100 --style=custom --chars='#-' --colorbar=green --colortext=yellow\n", os.Args[0])
 	}
@@ -208,7 +206,7 @@ func main() {
 		Style:       style,
 		ColorBar:    colorBarCode,
 		ColorText:   colorTextCode,
-		Finished:    finished,
+		Finished:    current >= total,
 		StartTime:   startTime,
 		CustomChars: customChars,
 		Message:     message,

@@ -61,7 +61,7 @@ clear # Clear the terminal for a clean demo start
 # Finished State
 section_header "Finished State"
 for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --finished --finished-message="Task Complete!" "$i" 100
+  "$PBAR_BIN" --finished-message="Task Complete!" "$i" 100
 sleep "$DEMO_SPEED"
 done
 sleep 0.5
