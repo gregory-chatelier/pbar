@@ -42,20 +42,24 @@ func main() {
 	var style string
 	var colorBarName string
 	var colorTextName string
-	var finished string
+	var finished bool
+	var finishedMessage string
 	var version bool
 	var customChars string
 	var parallel bool
+	var message string // Declare message flag
 
 	// Define flags
 	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
 	flag.StringVar(&style, "style", defaultStyle, "Style of the progress bar (classic, block, spinner, arrow, braille, custom)")
 	flag.StringVar(&colorBarName, "colorbar", "", fmt.Sprintf("Color for the bar. Available: %s", pbar.GetAvailableColors()))
 	flag.StringVar(&colorTextName, "colortext", "", fmt.Sprintf("Color for the text. Available: %s", pbar.GetAvailableColors()))
-	flag.StringVar(&finished, "finished", "", "Render a finished state with a message")
+	flag.BoolVar(&finished, "finished", false, "Render a finished state")
+	flag.StringVar(&finishedMessage, "finished-message", "", "Message to display when the progress bar is complete")
 	flag.BoolVar(&version, "version", false, "Print version information")
 	flag.StringVar(&customChars, "chars", "", "Custom characters for the progress bar (e.g., '#=')")
 	flag.BoolVar(&parallel, "parallel", false, "Enable parallel progress bar rendering")
+	flag.StringVar(&message, "message", "", "Optional message to display alongside the progress bar")
 
 	// Custom usage function for man-page style help
 	flag.Usage = func() {
@@ -68,6 +72,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  %s 25 100\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n  # Using a block style bar with custom width\n")
 		fmt.Fprintf(os.Stderr, "  %s 50 100 --style=block --width=20\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\n  # Message alongside progress\n")
+		fmt.Fprintf(os.Stderr, "  %s 75 100 --message=\"Processing...\"\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\n  # Finished state with custom message\n")
+		fmt.Fprintf(os.Stderr, "  %s 100 100 --finished --finished-message=\"Task Complete!\"\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n  # Custom characters and colors\n")
 		fmt.Fprintf(os.Stderr, "  %s 60 100 --style=custom --chars='#-' --colorbar=green --colortext=yellow\n", os.Args[0])
 	}
@@ -200,10 +208,11 @@ func main() {
 		Style:       style,
 		ColorBar:    colorBarCode,
 		ColorText:   colorTextCode,
-		Finished:    current >= total,
+		Finished:    finished,
 		StartTime:   startTime,
 		CustomChars: customChars,
-		Message:     finished,
+		Message:     message,
+		CompletionMessage: finishedMessage,
 	}
 
 	fmt.Print(bar.Render())

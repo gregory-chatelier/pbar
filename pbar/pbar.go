@@ -75,6 +75,7 @@ type Bar struct {
 	ThroughputHistory []float64
 	CustomChars       string
 	Message           string
+	CompletionMessage string
 	spinnerState      int
 	TestMode          bool
 }
@@ -154,11 +155,16 @@ func (b *Bar) Render() string {
 		metadataString = fmt.Sprintf(" Elapsed %s%s%s", elapsedTimeStr, throughputStr, etaStr)
 	}
 
+	if b.Message != "" {
+		metadataString = fmt.Sprintf("%s %s", metadataString, b.Message)
+	}
+
 	if b.Finished {
-		if b.Message != "" {
-			metadataString = fmt.Sprintf("%s %s", metadataString, b.Message)
+		finalFinishedMessage := "Task Complete!" // Default message
+		if b.CompletionMessage != "" {
+			finalFinishedMessage = b.CompletionMessage
 		}
-		result := fmt.Sprintf("[✔] 100%%%s", metadataString)
+		result := fmt.Sprintf("[✔] 100%% %s%s", finalFinishedMessage, metadataString)
 		result = "\r" + result + "\x1b[K"
 		return result
 	}

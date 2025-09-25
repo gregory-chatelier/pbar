@@ -144,7 +144,7 @@ func TestColorSupport(t *testing.T) {
 }
 
 func TestFinishedState(t *testing.T) {
-	t.Run("renders a finished bar", func(t *testing.T) {
+	t.Run("renders a finished bar with default message", func(t *testing.T) {
 		bar := &Bar{
 			Total:    100,
 			Current:  100,
@@ -152,7 +152,24 @@ func TestFinishedState(t *testing.T) {
 			Finished: true,
 		}
 
-		expected := "\r[✔] 100%\x1b[K"
+		expected := "\r[✔] 100% Task Complete!\x1b[K"
+		actual := bar.Render()
+
+		if actual != expected {
+			t.Errorf("Expected '%s', but got '%s'", expected, actual)
+		}
+	})
+
+	t.Run("renders a finished bar with custom message", func(t *testing.T) {
+		bar := &Bar{
+			Total:             100,
+			Current:           100,
+			Width:             10,
+			Finished:          true,
+			CompletionMessage: "Done!",
+		}
+
+		expected := "\r[✔] 100% Done!\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
