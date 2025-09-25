@@ -18,7 +18,6 @@ type Update struct {
 	ColorBar    string `json:"colorbar"`
 	ColorText   string `json:"colortext"`
 	Finished    bool   `json:"finished"`
-	Quiet       bool   `json:"quiet"`
 	CustomChars string `json:"chars"`
 	Message     string `json:"message"`
 }
@@ -73,7 +72,6 @@ func (m *Manager) UpdateBar(update Update) {
 		bar.ColorText = GetColorCode(update.ColorText)
 	}
 	bar.Finished = update.Finished
-	bar.Quiet = update.Quiet
 	if update.CustomChars != "" {
 		bar.CustomChars = update.CustomChars
 	}

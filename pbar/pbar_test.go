@@ -15,7 +15,7 @@ func TestClassicBar(t *testing.T) {
 			Width:   10,
 		}
 
-		expected := "\r[#####-----] 50%"
+		expected := "\r[#####-----] 50%\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
@@ -33,7 +33,7 @@ func TestBlockBar(t *testing.T) {
 			Style:   "block",
 		}
 
-		expected := "\r[█████     ] 50%"
+		expected := "\r[█████     ] 50%\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
@@ -45,18 +45,16 @@ func TestBlockBar(t *testing.T) {
 func TestSpinner(t *testing.T) {
 	t.Run("renders a spinner that cycles through characters", func(t *testing.T) {
 		bar := &Bar{
-			Total:   100,
-			Current: 25,
 			Style:   "spinner",
 			TestMode: true,
 		}
 
 		expectations := []string{
-			"\r[|] 25%",
-			"\r[/] 25%",
-			"\r[-] 25%",
-			"\r[\\] 25%",
-			"\r[|] 25%", // Check for wrap around
+			"\r[|]\x1b[K",
+			"\r[/]\x1b[K",
+			"\r[-]\x1b[K",
+			"\r[\\]\x1b[K",
+			"\r[|]\x1b[K", // Check for wrap around
 		}
 
 		for i, expected := range expectations {
@@ -72,23 +70,21 @@ func TestSpinner(t *testing.T) {
 func TestBrailleSpinner(t *testing.T) {
 	t.Run("renders a braille spinner that cycles through characters", func(t *testing.T) {
 		bar := &Bar{
-			Total:   100,
-			Current: 25,
 			Style:   "braille-spinner",
 			TestMode: true,
 		}
 
 		expectations := []string{
-			"\r[⠋] 25%",
-			"\r[⠙] 25%",
-			"\r[⠹] 25%",
-			"\r[⠸] 25%",
-			"\r[⠼] 25%",
-			"\r[⠴] 25%",
-			"\r[⠦] 25%",
-			"\r[⠧] 25%",
-			"\r[⠇] 25%",
-			"\r[⠏] 25%",
+			"\r[⠋]\x1b[K",
+			"\r[⠙]\x1b[K",
+			"\r[⠹]\x1b[K",
+			"\r[⠸]\x1b[K",
+			"\r[⠼]\x1b[K",
+			"\r[⠴]\x1b[K",
+			"\r[⠦]\x1b[K",
+			"\r[⠧]\x1b[K",
+			"\r[⠇]\x1b[K",
+			"\r[⠏]\x1b[K",
 		}
 
 		for i, expected := range expectations {
@@ -104,15 +100,15 @@ func TestBrailleSpinner(t *testing.T) {
 func TestIndeterminateMode(t *testing.T) {
 	t.Run("renders a spinner without percentage", func(t *testing.T) {
 		bar := &Bar{
-			Indeterminate: true,
-			TestMode:      true,
+			Style:    "spinner",
+			TestMode: true,
 		}
 
 		expectations := []string{
-			"\r[|]",
-			"\r[/]",
-			"\r[-]",
-			"\r[\\]",
+			"\r[|]\x1b[K",
+			"\r[/]\x1b[K",
+			"\r[-]\x1b[K",
+			"\r[\\]\x1b[K",
 		}
 
 		for i, expected := range expectations {
@@ -138,7 +134,7 @@ func TestColorSupport(t *testing.T) {
 			ColorBar: green, // Use the ANSI code directly, as the Render function expects
 		}
 
-		expected := fmt.Sprintf("\r%s[#####-----]%s 50%%", green, reset)
+		expected := fmt.Sprintf("\r%s[#####-----]%s 50%%\x1b[K", green, reset)
 		actual := bar.Render()
 
 		if actual != expected {
@@ -156,7 +152,7 @@ func TestFinishedState(t *testing.T) {
 			Finished: true,
 		}
 
-		expected := "\r[✔] 100%"
+		expected := "\r[✔] 100%\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
@@ -165,23 +161,7 @@ func TestFinishedState(t *testing.T) {
 	})
 }
 
-func TestQuietMode(t *testing.T) {
-	t.Run("renders only the percentage when quiet", func(t *testing.T) {
-		bar := &Bar{
-			Total:   100,
-			Current: 75,
-			Width:   10,
-			Quiet:   true,
-		}
 
-		expected := "75%"
-		actual := bar.Render()
-
-		if actual != expected {
-			t.Errorf("Expected '%s', but got '%s'", expected, actual)
-		}
-	})
-}
 
 func TestArrowBar(t *testing.T) {
 	t.Run("renders an arrow bar at 50%", func(t *testing.T) {
@@ -192,7 +172,7 @@ func TestArrowBar(t *testing.T) {
 			Style:   "arrow",
 		}
 
-		expected := "\r[---->     ] 50%"
+		expected := "\r[---->     ] 50%\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
@@ -210,7 +190,7 @@ func TestBrailleBar(t *testing.T) {
 			Style:   "braille",
 		}
 
-		expected := "\r[⣿⣿⣿⣿⣿     ] 50%"
+		expected := "\r[⣿⣿⣿⣿⣿     ] 50%\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
@@ -228,7 +208,7 @@ func TestBrailleBarFractional(t *testing.T) {
 			Style:   "braille",
 		}
 
-		expected := "\r[⣿⣿⣿⣿⣿⠏    ] 55%"
+		expected := "\r[⣿⣿⣿⣿⣿⠏    ] 55%\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
@@ -290,7 +270,7 @@ func TestCustomBar(t *testing.T) {
 			CustomChars: "#=",
 		}
 
-		expected := "\r[#####=====] 50%"
+		expected := "\r[#####=====] 50%\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
@@ -307,7 +287,7 @@ func TestCustomBar(t *testing.T) {
 			CustomChars: "*",
 		}
 
-		expected := "\r[**********] 50%"
+		expected := "\r[**********] 50%\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
@@ -324,7 +304,7 @@ func TestCustomBar(t *testing.T) {
 			CustomChars: "",
 		}
 
-		expected := "\r[#####-----] 50%"
+		expected := "\r[#####-----] 50%\x1b[K"
 		actual := bar.Render()
 
 		if actual != expected {
@@ -336,7 +316,7 @@ func TestCustomBar(t *testing.T) {
 func TestBarEdgeCases(t *testing.T) {
 	t.Run("classic bar at 0%", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 0, Width: 10, Style: "classic"}
-		expected := "\r[----------] 0%"
+		expected := "\r[----------] 0%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -345,7 +325,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("classic bar at 100%", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 100, Width: 10, Style: "classic"}
-		expected := "\r[##########] 100%"
+		expected := "\r[##########] 100%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -354,7 +334,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("block bar at 0%", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 0, Width: 10, Style: "block"}
-		expected := "\r[          ] 0%"
+		expected := "\r[          ] 0%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -363,7 +343,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("block bar at 100%", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 100, Width: 10, Style: "block"}
-		expected := "\r[██████████] 100%"
+		expected := "\r[██████████] 100%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -372,7 +352,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("total is 0, current is 0", func(t *testing.T) {
 		bar := &Bar{Total: 0, Current: 0, Width: 10, Style: "classic"}
-		expected := "\r[----------] 0%"
+		expected := "\r[----------] 0%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -381,7 +361,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("total is 0, current is non-zero", func(t *testing.T) {
 		bar := &Bar{Total: 0, Current: 50, Width: 10, Style: "classic"}
-		expected := "\r[##########] 100%"
+		expected := "\r[##########] 100%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -390,7 +370,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("width is 0", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 50, Width: 0, Style: "classic"}
-		expected := "\r[] 50%"
+		expected := "\r[] 50%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -399,7 +379,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("width is 1", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 50, Width: 1, Style: "classic"}
-		expected := "\r[#] 50%"
+		expected := "\r[#] 50%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -408,7 +388,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("arrow bar at 0%", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 0, Width: 10, Style: "arrow"}
-		expected := "\r[          ] 0%"
+		expected := "\r[          ] 0%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -417,7 +397,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("arrow bar at 100%", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 100, Width: 10, Style: "arrow"}
-		expected := "\r[--------->] 100%"
+		expected := "\r[--------->] 100%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -426,7 +406,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("braille bar at 0%", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 0, Width: 10, Style: "braille"}
-		expected := "\r[          ] 0%"
+		expected := "\r[          ] 0%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -435,7 +415,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("braille bar at 100%", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 100, Width: 10, Style: "braille"}
-		expected := "\r[⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿] 100%"
+		expected := "\r[⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿] 100%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -444,7 +424,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("braille bar fractional 1/8", func(t *testing.T) {
 		bar := &Bar{Total: 8, Current: 1, Width: 1, Style: "braille"}
-		expected := "\r[⠁] 12%"
+		expected := "\r[⠁] 12%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -453,7 +433,7 @@ func TestBarEdgeCases(t *testing.T) {
 
 	t.Run("braille bar fractional 7/8", func(t *testing.T) {
 		bar := &Bar{Total: 8, Current: 7, Width: 1, Style: "braille"}
-		expected := "\r[⡿] 87%"
+		expected := "\r[⡿] 87%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -504,7 +484,7 @@ func TestSmartMetadataEdgeCases(t *testing.T) {
 func TestInvalidInputs(t *testing.T) {
 	t.Run("negative current", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: -10, Width: 10}
-		expected := "\r[----------] 0%"
+		expected := "\r[----------] 0%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -513,7 +493,7 @@ func TestInvalidInputs(t *testing.T) {
 
 	t.Run("negative total", func(t *testing.T) {
 		bar := &Bar{Total: -100, Current: 50, Width: 10}
-		expected := "\r[##########] 100%"
+		expected := "\r[##########] 100%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -522,7 +502,7 @@ func TestInvalidInputs(t *testing.T) {
 
 	t.Run("negative width", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 50, Width: -10}
-		expected := "\r[] 50%"
+		expected := "\r[] 50%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -531,7 +511,7 @@ func TestInvalidInputs(t *testing.T) {
 
 	t.Run("invalid style", func(t *testing.T) {
 		bar := &Bar{Total: 100, Current: 50, Width: 10, Style: "invalid"}
-		expected := "\r[#####-----] 50%" // devrait utiliser le style par défaut
+		expected := "\r[#####-----] 50%\x1b[K" // devrait utiliser le style par défaut
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)
@@ -546,7 +526,7 @@ func TestLargeNumbers(t *testing.T) {
 			Current: 1 << 30,   // half of max int32
 			Width:   10,
 		}
-		expected := "\r[#####-----] 50%"
+		expected := "\r[#####-----] 50%\x1b[K"
 		actual := bar.Render()
 		if actual != expected {
 			t.Errorf("Expected '%s', got '%s'", expected, actual)

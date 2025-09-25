@@ -120,15 +120,6 @@ Use your own characters for the progress bar.
 pbar 70 100 --style=custom --chars="█ " --colorbar=magenta
 ```
 
-### Quiet Mode for Scripting
-
-Get only the percentage for further processing.
-
-```bash
-progress_percent=$(pbar 80 100 --quiet)
-echo "Current progress: $progress_percent"
-```
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

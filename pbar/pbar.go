@@ -67,11 +67,9 @@ type Bar struct {
 	Current           int
 	Width             int
 	Style             string
-	Indeterminate     bool
 	ColorBar          string // Now stores ANSI escape code directly
 	ColorText         string // Now stores ANSI escape code directly
 	Finished          bool
-	Quiet             bool
 	StartTime         time.Time
 	LastUpdateTime    time.Time
 	ThroughputHistory []float64
@@ -111,10 +109,6 @@ func (b *Bar) Render() string {
 
 	percentString := fmt.Sprintf("%d%%", int(percent*100))
 
-	if b.Quiet {
-		return percentString
-	}
-
 	var metadataString string
 	var throughputStr, etaStr string // Always initialize
 
@@ -124,7 +118,8 @@ func (b *Bar) Render() string {
 		elapsedTimeStr := formatDuration(elapsedTime)
 
 		// Calculate throughput and ETA only if not indeterminate and elapsed time is non-zero
-		if !b.Indeterminate && elapsedTime.Seconds() > 0 {
+		isIndeterminate := b.Style == "spinner" || b.Style == "braille-spinner"
+		if !isIndeterminate && elapsedTime.Seconds() > 0 {
 			var currentThroughput float64
 			if b.Total > 0 && b.Current > 0 {
 				currentThroughput = float64(b.Current) / elapsedTime.Seconds()
@@ -165,13 +160,12 @@ func (b *Bar) Render() string {
 
 	if b.Finished {
 		result := fmt.Sprintf("[✔] 100%%%s", metadataString)
-		if !b.Quiet {
-			result = "\r" + result + "\x1b[K"
-		}
+		result = "\r" + result + "\x1b[K"
 		return result
 	}
 
-	if b.Indeterminate {
+	isIndeterminate := b.Style == "spinner" || b.Style == "braille-spinner"
+	if isIndeterminate {
 		if !b.TestMode {
 			b.spinnerState = getSpinnerState()
 		}
@@ -190,9 +184,7 @@ func (b *Bar) Render() string {
 		if b.ColorText != "" {
 			result = fmt.Sprintf("[%s%s%s]%s", b.ColorText, char, "\x1b[0m", metadataString)
 		}
-		if !b.Quiet {
-			result = "\r" + result + "\x1b[K"
-		}
+		result = "\r" + result + "\x1b[K"
 		return result
 	}
 
@@ -258,10 +250,8 @@ func (b *Bar) Render() string {
 
 	result := fmt.Sprintf("%s %s%s", barString, percentString, metadataString)
 	
-	// Add carriage return for inline updates (except in quiet mode)
-	if !b.Quiet {
-		result = "\r" + result + "\x1b[K"
-	}
+	// Add carriage return for inline updates
+	result = "\r" + result + "\x1b[K"
 	
 	return result
 }

@@ -58,8 +58,6 @@ section_header() {
 
 clear # Clear the terminal for a clean demo start
 
-section_header "Single Bar Examples"
-
 # Classic Bar
 section_header "Classic Bar"
 for i in $(seq 0 10 100); do

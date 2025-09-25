@@ -45,7 +45,6 @@ func main() {
 	var colorTextName string
 	var finished bool
 	var version bool
-	var quiet bool
 	var customChars string
 	var parallel bool
 	var message string // Declare message flag
@@ -53,12 +52,10 @@ func main() {
 	// Define flags
 	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
 	flag.StringVar(&style, "style", defaultStyle, "Style of the progress bar (classic, block, spinner, arrow, braille, custom)")
-	flag.BoolVar(&indeterminate, "indeterminate", false, "Render an indeterminate spinner")
 	flag.StringVar(&colorBarName, "colorbar", "", fmt.Sprintf("Color for the bar. Available: %s", pbar.GetAvailableColors()))
 	flag.StringVar(&colorTextName, "colortext", "", fmt.Sprintf("Color for the text. Available: %s", pbar.GetAvailableColors()))
 	flag.BoolVar(&finished, "finished", false, "Render a finished state")
 	flag.BoolVar(&version, "version", false, "Print version information")
-	flag.BoolVar(&quiet, "quiet", false, "Output only the percentage")
 	flag.StringVar(&customChars, "chars", "", "Custom characters for the progress bar (e.g., '#=')")
 	flag.BoolVar(&parallel, "parallel", false, "Enable parallel progress bar rendering")
 	flag.StringVar(&message, "message", "", "Optional message to display with the progress bar")
@@ -74,29 +71,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  %s 25 100\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n  # Using a block style bar with custom width\n")
 		fmt.Fprintf(os.Stderr, "  %s 50 100 --style=block --width=20\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Indeterminate spinner\n")
-		fmt.Fprintf(os.Stderr, "  %s --indeterminate\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Quiet mode (output only percentage) for scripting\n")
-		fmt.Fprintf(os.Stderr, "  %s 75 100 --quiet\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Custom characters and colors\n")
-		fmt.Fprintf(os.Stderr, "  %s 60 100 --style=custom --chars='#-' --colorbar=green --colortext=yellow\n", os.Args[0])
-	}
-
-	// Custom usage function for man-page style help
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [current] [total] [flags]\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n%s is a command-line tool that makes it easy to add progress bars to any Bash or Zsh script.\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\nFlags:\n")
-		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nExamples:\n")
-		fmt.Fprintf(os.Stderr, "  # Basic usage: 25%% complete out of 100\n")
-		fmt.Fprintf(os.Stderr, "  %s 25 100\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Using a block style bar with custom width\n")
-		fmt.Fprintf(os.Stderr, "  %s 50 100 --style=block --width=20\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Indeterminate spinner\n")
-		fmt.Fprintf(os.Stderr, "  %s --indeterminate\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Quiet mode (output only percentage) for scripting\n")
-		fmt.Fprintf(os.Stderr, "  %s 75 100 --quiet\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n  # Custom characters and colors\n")
 		fmt.Fprintf(os.Stderr, "  %s 60 100 --style=custom --chars='#-' --colorbar=green --colortext=yellow\n", os.Args[0])
 	}
@@ -106,7 +80,7 @@ func main() {
 	args := os.Args[1:]
 	var flags []string
 	var positionalArgs []string
-	
+
 	// Separate flags from positional arguments
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
@@ -116,9 +90,9 @@ func main() {
 			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
 				// Check if this flag expects a value
 				flagName := strings.TrimPrefix(strings.TrimPrefix(arg, "-"), "-")
-				if flagName == "width" || flagName == "style" || flagName == "colorbar" || 
-				   flagName == "colortext" || flagName == "chars" || flagName == "message" {
-					i++ // Move to flag value
+				if flagName == "width" || flagName == "style" || flagName == "colorbar" ||
+					flagName == "colortext" || flagName == "chars" || flagName == "message" {
+					i++                            // Move to flag value
 					flags = append(flags, args[i]) // Add flag value
 				}
 			}
@@ -226,18 +200,16 @@ func main() {
 	colorTextCode := pbar.GetColorCode(colorTextName)
 
 	bar := &pbar.Bar{
-		Total:         total,
-		Current:       current,
-		Width:         width,
-		Style:         style,
-		Indeterminate: indeterminate,
-		ColorBar:      colorBarCode,
-		ColorText:     colorTextCode,
-		Finished:      finished,
-		Quiet:         quiet,
-		StartTime:     startTime,
-		CustomChars:   customChars,
-		Message:       message,
+		Total:       total,
+		Current:     current,
+		Width:       width,
+		Style:       style,
+		ColorBar:    colorBarCode,
+		ColorText:   colorTextCode,
+		Finished:    finished,
+		StartTime:   startTime,
+		CustomChars: customChars,
+		Message:     message,
 	}
 
 	fmt.Print(bar.Render())
