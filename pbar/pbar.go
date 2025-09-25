@@ -166,7 +166,7 @@ func (b *Bar) Render() string {
 	if b.Finished {
 		result := fmt.Sprintf("[✔] 100%%%s", metadataString)
 		if !b.Quiet {
-			result = "\r" + result
+			result = "\r" + result + "\x1b[K"
 		}
 		return result
 	}
@@ -191,7 +191,7 @@ func (b *Bar) Render() string {
 			result = fmt.Sprintf("[%s%s%s]%s", b.ColorText, char, "\x1b[0m", metadataString)
 		}
 		if !b.Quiet {
-			result = "\r" + result
+			result = "\r" + result + "\x1b[K"
 		}
 		return result
 	}
@@ -260,7 +260,7 @@ func (b *Bar) Render() string {
 	
 	// Add carriage return for inline updates (except in quiet mode)
 	if !b.Quiet {
-		result = "\r" + result
+		result = "\r" + result + "\x1b[K"
 	}
 	
 	return result
