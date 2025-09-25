@@ -58,6 +58,14 @@ section_header() {
 
 clear # Clear the terminal for a clean demo start
 
+# Finished State
+section_header "Finished State"
+for i in $(seq 0 10 100); do
+  "$PBAR_BIN" --finished="Task Complete!" "$i" 100
+sleep "$DEMO_SPEED"
+done
+sleep 0.5
+
 # Classic Bar
 section_header "Classic Bar"
 for i in $(seq 0 10 100); do
@@ -106,10 +114,6 @@ for i in $(seq 0 10 100); do
 done
 sleep 0.5
 
-# Finished State
-section_header "Finished State"
-"$PBAR_BIN" --finished --message="Task Complete!" 100 100
-sleep 1
 
 sleep 2 # Allow final states to be displayed
 

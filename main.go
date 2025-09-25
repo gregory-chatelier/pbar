@@ -40,25 +40,22 @@ func main() {
 	// Declare variables for flags
 	var width int
 	var style string
-	var indeterminate bool
 	var colorBarName string
 	var colorTextName string
-	var finished bool
+	var finished string
 	var version bool
 	var customChars string
 	var parallel bool
-	var message string // Declare message flag
 
 	// Define flags
 	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
 	flag.StringVar(&style, "style", defaultStyle, "Style of the progress bar (classic, block, spinner, arrow, braille, custom)")
 	flag.StringVar(&colorBarName, "colorbar", "", fmt.Sprintf("Color for the bar. Available: %s", pbar.GetAvailableColors()))
 	flag.StringVar(&colorTextName, "colortext", "", fmt.Sprintf("Color for the text. Available: %s", pbar.GetAvailableColors()))
-	flag.BoolVar(&finished, "finished", false, "Render a finished state")
+	flag.StringVar(&finished, "finished", "", "Render a finished state with a message")
 	flag.BoolVar(&version, "version", false, "Print version information")
 	flag.StringVar(&customChars, "chars", "", "Custom characters for the progress bar (e.g., '#=')")
 	flag.BoolVar(&parallel, "parallel", false, "Enable parallel progress bar rendering")
-	flag.StringVar(&message, "message", "", "Optional message to display with the progress bar")
 
 	// Custom usage function for man-page style help
 	flag.Usage = func() {
@@ -190,10 +187,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Automatically set indeterminate for spinner styles
-	if style == "spinner" || style == "braille-spinner" {
-		indeterminate = true
-	}
+
 
 	// Validate and get ANSI color codes
 	colorBarCode := pbar.GetColorCode(colorBarName)
@@ -206,16 +200,17 @@ func main() {
 		Style:       style,
 		ColorBar:    colorBarCode,
 		ColorText:   colorTextCode,
-		Finished:    finished,
+		Finished:    current >= total,
 		StartTime:   startTime,
 		CustomChars: customChars,
-		Message:     message,
+		Message:     finished,
 	}
 
 	fmt.Print(bar.Render())
 
-	// Exit with an error code if current > total (unless finished or indeterminate)
-	if !finished && !indeterminate && current > total {
+	// Exit with an error code if current > total (unless finished)
+	isIndeterminate := style == "spinner" || style == "braille-spinner"
+	if !(current >= total) && !isIndeterminate && current > total {
 		fmt.Fprintln(os.Stderr, "Error: Current value cannot be greater than total.")
 		os.Exit(1)
 	}

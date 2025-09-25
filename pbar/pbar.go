@@ -154,11 +154,10 @@ func (b *Bar) Render() string {
 		metadataString = fmt.Sprintf(" Elapsed %s%s%s", elapsedTimeStr, throughputStr, etaStr)
 	}
 
-	if b.Message != "" {
-		metadataString = fmt.Sprintf("%s %s", metadataString, b.Message)
-	}
-
 	if b.Finished {
+		if b.Message != "" {
+			metadataString = fmt.Sprintf("%s %s", metadataString, b.Message)
+		}
 		result := fmt.Sprintf("[✔] 100%%%s", metadataString)
 		result = "\r" + result + "\x1b[K"
 		return result
