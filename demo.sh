@@ -58,10 +58,26 @@ section_header() {
 
 clear # Clear the terminal for a clean demo start
 
+# Default Spinner
+section_header "Default Spinner (Indeterminate)"
+for i in $(seq 0 5 100); do
+  "$PBAR_BIN" --style=spinner "$i" 100
+  sleep "$DEMO_SPEED"
+done
+sleep 0.5
+
+# Braille Spinner
+section_header "Braille Spinner"
+for i in $(seq 0 5 100); do
+  "$PBAR_BIN" --style=braille-spinner "$i" 100
+  sleep "$DEMO_SPEED"
+done
+sleep 0.5
+
 # Finished State
 section_header "Finished State"
 for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --finished-message="Task Complete!" "$i" 100
+  "$PBAR_BIN" --finished-message="Done!" "$i" 100
 sleep "$DEMO_SPEED"
 done
 sleep 0.5
