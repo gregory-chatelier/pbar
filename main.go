@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -38,6 +40,47 @@ func isValidStyle(style string) bool {
 	return false
 }
 
+// generateInstanceID creates a stable ID for a progress bar instance.
+// It hashes relevant command-line arguments to ensure uniqueness across different logical bars,
+// but stability across iterations of the same logical bar.
+func generateInstanceID(args []string, explicitID string) string {
+	var signatureParts []string
+
+	// Add explicit ID if provided
+	if explicitID != "" {
+		signatureParts = append(signatureParts, explicitID)
+	}
+
+	// Add relevant flags to the signature. Exclude 'current' and 'total' as they change per iteration.
+	// Also exclude 'message' as it can change dynamically.
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if strings.HasPrefix(arg, "-") {
+			flagName := strings.TrimPrefix(strings.TrimPrefix(arg, "-"), "-")
+			if flagName != "current" && flagName != "total" && flagName != "message" {
+				signatureParts = append(signatureParts, arg)
+				if strings.Contains(arg, "=") { // Handle --flag=value
+					// Value is already part of arg
+				} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") { // Handle --flag value
+					signatureParts = append(signatureParts, args[i+1])
+					i++ // Skip next arg as it's the value
+				}
+			}
+		}
+	}
+
+	// If no explicit ID and no relevant flags, use a default signature
+	if len(signatureParts) == 0 {
+		signatureParts = append(signatureParts, "default_pbar_instance")
+	}
+
+	// Combine parts and hash
+	signature := strings.Join(signatureParts, "_")
+	h := sha256.New()
+	h.Write([]byte(signature))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 func main() {
 	// Declare variables for flags
 	var width int
@@ -50,6 +93,7 @@ func main() {
 	var parallel bool
 	var message string // Declare message flag
 	var showElapsed, showThroughput, showETA bool
+	var explicitInstanceID string // New flag for explicit ID
 
 	// Define flags
 	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
@@ -64,27 +108,7 @@ func main() {
 	flag.BoolVar(&showElapsed, "show-elapsed", true, "Show elapsed time (default: true)")
 	flag.BoolVar(&showThroughput, "show-throughput", true, "Show throughput (iterations/second) (default: true)")
 	flag.BoolVar(&showETA, "show-eta", true, "Show estimated time remaining (default: true)")
-
-	// Custom usage function for man-page style help
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [current] [total] [flags]\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n%s is a command-line tool that makes it easy to add progress bars to any Bash or Zsh script.\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\nFlags:\n")
-		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nExamples:\n")
-		fmt.Fprintf(os.Stderr, "  # Basic usage: 25%% complete out of 100\n")
-		fmt.Fprintf(os.Stderr, "  %s 25 100\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Using a block style bar with custom width\n")
-		fmt.Fprintf(os.Stderr, "  %s 50 100 --style=block --width=20\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Message alongside progress\n")
-		fmt.Fprintf(os.Stderr, "  %s 75 100 --message=\"Processing...\"\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Finished state with custom message\n")
-		fmt.Fprintf(os.Stderr, "  %s 100 100 --finished-message=\"Task Complete!\"\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Hide elapsed time and throughput\n")
-		fmt.Fprintf(os.Stderr, "  %s 50 100 --show-elapsed=false --show-throughput=false\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n  # Custom characters and colors\n")
-		fmt.Fprintf(os.Stderr, "  %s 60 100 --style=custom --chars='#-' --colorbar=green --colortext=yellow\n", os.Args[0])
-	}
+	flag.StringVar(&explicitInstanceID, "id", "", "Unique ID for the progress bar instance (optional)")
 
 	// Custom parsing to handle flags anywhere in the argument list
 	// Reorder arguments to put all flags first, then positional args
@@ -221,17 +245,19 @@ func main() {
 	colorBarCode := pbar.GetColorCode(colorBarName)
 	colorTextCode := pbar.GetColorCode(colorTextName)
 
+	instanceID := generateInstanceID(os.Args, explicitInstanceID)
+
 	var bar *pbar.Bar
 	if current == 0 {
 		// If current is 0, it's a new progress bar, so initialize a fresh state
 		bar = &pbar.Bar{}
 		bar.StartTime = time.Now()
-		pbar.DeleteState() // Ensure no old state interferes
+		pbar.DeleteState(instanceID) // Ensure no old state interferes
 	} else {
 		// Otherwise, try to load the existing state
-		loadedBar, err := pbar.LoadState()
+		loadedBar, err := pbar.LoadState(instanceID)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: Expected existing progress bar state but none found: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error: Expected existing progress bar state for ID '%s' but none found: %v\n", instanceID, err)
 			os.Exit(1)
 		}
 		bar = loadedBar
@@ -255,10 +281,10 @@ func main() {
 	fmt.Print(bar.Render())
 
 	if bar.Finished {
-		pbar.DeleteState()
+		pbar.DeleteState(instanceID)
 	} else {
 		bar.LastUpdateTime = time.Now()
-		pbar.SaveState(bar)
+		pbar.SaveState(bar, instanceID)
 	}
 
 	// Exit with an error code if current > total (unless finished)

@@ -14,25 +14,26 @@ const (
 	maxThroughputHistorySize = 10
 	defaultStyle             = "classic"
 	defaultWidth             = 50
-	stateFileName            = ".pbar.state"
+	stateFilePrefix          = ".pbar."
+	stateFileSuffix          = ".state"
 )
 
-func getStateFile() string {
-	return filepath.Join(os.TempDir(), stateFileName)
+func getStateFile(instanceID string) string {
+	return filepath.Join(os.TempDir(), stateFilePrefix+instanceID+stateFileSuffix)
 }
 
 // SaveState saves the bar state to a file.
-func SaveState(b *Bar) error {
+func SaveState(b *Bar, instanceID string) error {
 	data, err := json.Marshal(b)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(getStateFile(), data, 0644)
+	return os.WriteFile(getStateFile(instanceID), data, 0644)
 }
 
 // LoadState loads the bar state from a file.
-func LoadState() (*Bar, error) {
-	data, err := os.ReadFile(getStateFile())
+func LoadState(instanceID string) (*Bar, error) {
+	data, err := os.ReadFile(getStateFile(instanceID))
 	if err != nil {
 		return nil, err
 	}
@@ -45,8 +46,8 @@ func LoadState() (*Bar, error) {
 }
 
 // DeleteState removes the state file.
-func DeleteState() error {
-	return os.Remove(getStateFile())
+func DeleteState(instanceID string) error {
+	return os.Remove(getStateFile(instanceID))
 }
 
 var spinnerChars = []string{"|", "/", "-", "\\"}
@@ -76,25 +77,25 @@ var validStyles = map[string]bool{
 
 // Bar represents a progress bar.
 type Bar struct {
-	Total             int
-	Current           int
-	PreviousCurrent   int
-	Width             int
-	Style             string
-	ColorBar          string // Now stores ANSI escape code directly
-	ColorText         string // Now stores ANSI escape code directly
-	Finished          bool
-	StartTime         time.Time
-	LastUpdateTime    time.Time
-	ThroughputHistory []float64
-	CustomChars       string
-	Message           string
-	CompletionMessage string
-	ShowElapsed       bool
-	ShowThroughput    bool
-	ShowETA           bool
-	SpinnerState      int
-	TestMode          bool
+	Total             int       `json:"total"`
+	Current           int       `json:"current"`
+	PreviousCurrent   int       `json:"previous_current"`
+	Width             int       `json:"width"`
+	Style             string    `json:"style"`
+	ColorBar          string    `json:"color_bar"`
+	ColorText         string    `json:"color_text"`
+	Finished          bool      `json:"finished"`
+	StartTime         time.Time `json:"start_time"`
+	LastUpdateTime    time.Time `json:"last_update_time"`
+	ThroughputHistory []float64 `json:"throughput_history"`
+	CustomChars       string    `json:"custom_chars"`
+	Message           string    `json:"message"`
+	CompletionMessage string    `json:"completion_message"`
+	ShowElapsed       bool      `json:"show_elapsed"`
+	ShowThroughput    bool      `json:"show_throughput"`
+	ShowETA           bool      `json:"show_eta"`
+	SpinnerState      int       `json:"spinner_state"`
+	TestMode          bool      `json:"-"` // Not serialized
 }
 
 // Render generates the string representation of the progress bar.
@@ -130,7 +131,7 @@ func (b *Bar) Render() string {
 	percentString := fmt.Sprintf("%d%%", int(percent*100))
 
 	var metadataString string
-	var throughputStr, etaStr string // Always initialize
+	var throughputStr, etaStr string
 
 	if !b.StartTime.IsZero() {
 		// Calculate elapsed time

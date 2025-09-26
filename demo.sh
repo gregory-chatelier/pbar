@@ -13,7 +13,7 @@ set -euo pipefail
 
 # --- Configuration ---
 PBAR_BIN="./pbar/main.exe" # Path to the pbar executable
-DEMO_SPEED=0.5    # Adjust for faster/slower demo (seconds per update)
+DEMO_SPEED=0.05    # Adjust for faster/slower demo (seconds per update)
 
 # --- Helper Functions ---
 
@@ -74,12 +74,12 @@ for i in $(seq 0 5 100); do
 done
 sleep 0.5
 
-# section_header "Conditional Metadata (Throughput Hidden)"
-# for i in $(seq 0 5 100); do
-#   "$PBAR_BIN" --show-throughput=false "$i" 100
-#   sleep "$DEMO_SPEED"
-# done
-# sleep 0.5
+section_header "Conditional Metadata (Throughput Hidden)"
+for i in $(seq 0 5 100); do
+  "$PBAR_BIN" --id="task1" --show-throughput=false "$i" 100
+  sleep "$DEMO_SPEED"
+done
+sleep 0.5
 
 # section_header "Conditional Metadata (ETA Hidden)"
 # for i in $(seq 0 5 100); do
