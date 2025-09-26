@@ -24,6 +24,10 @@ const (
 	defaultTotal = 100
 )
 
+func boolPtr(v bool) *bool {
+	return &v
+}
+
 func isValidStyle(style string) bool {
 	validStyles := []string{"classic", "block", "spinner", "arrow", "braille", "custom", "braille-spinner"}
 	for _, s := range validStyles {
@@ -35,8 +39,6 @@ func isValidStyle(style string) bool {
 }
 
 func main() {
-	startTime := time.Now()
-
 	// Declare variables for flags
 	var width int
 	var style string
@@ -47,6 +49,7 @@ func main() {
 	var customChars string
 	var parallel bool
 	var message string // Declare message flag
+	var showElapsed, showThroughput, showETA bool
 
 	// Define flags
 	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
@@ -58,6 +61,9 @@ func main() {
 	flag.StringVar(&customChars, "chars", "", "Custom characters for the progress bar (e.g., '#=')")
 	flag.BoolVar(&parallel, "parallel", false, "Enable parallel progress bar rendering")
 	flag.StringVar(&message, "message", "", "Optional message to display alongside the progress bar")
+	flag.BoolVar(&showElapsed, "show-elapsed", true, "Show elapsed time (default: true)")
+	flag.BoolVar(&showThroughput, "show-throughput", true, "Show throughput (iterations/second) (default: true)")
+	flag.BoolVar(&showETA, "show-eta", true, "Show estimated time remaining (default: true)")
 
 	// Custom usage function for man-page style help
 	flag.Usage = func() {
@@ -74,6 +80,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  %s 75 100 --message=\"Processing...\"\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n  # Finished state with custom message\n")
 		fmt.Fprintf(os.Stderr, "  %s 100 100 --finished-message=\"Task Complete!\"\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\n  # Hide elapsed time and throughput\n")
+		fmt.Fprintf(os.Stderr, "  %s 50 100 --show-elapsed=false --show-throughput=false\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "\n  # Custom characters and colors\n")
 		fmt.Fprintf(os.Stderr, "  %s 60 100 --style=custom --chars='#-' --colorbar=green --colortext=yellow\n", os.Args[0])
 	}
@@ -88,13 +96,20 @@ func main() {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		if strings.HasPrefix(arg, "-") {
+			// Handle flags like --foo=bar
+			if strings.Contains(arg, "=") {
+				parts := strings.SplitN(arg, "=", 2)
+				flags = append(flags, parts[0], parts[1])
+				continue
+			}
+
 			flags = append(flags, arg)
+
 			// Check if next argument is a flag value (not starting with -)
 			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
 				// Check if this flag expects a value
 				flagName := strings.TrimPrefix(strings.TrimPrefix(arg, "-"), "-")
-				if flagName == "width" || flagName == "style" || flagName == "colorbar" ||
-					flagName == "colortext" || flagName == "chars" || flagName == "message" {
+				if flag.Lookup(flagName) != nil && flag.Lookup(flagName).Value.String() != "true" && flag.Lookup(flagName).Value.String() != "false" {
 					i++                            // Move to flag value
 					flags = append(flags, args[i]) // Add flag value
 				}
@@ -146,6 +161,15 @@ func main() {
 				fmt.Fprintf(os.Stderr, "Error parsing JSON: %v\n", err)
 				continue
 			}
+			if update.ShowElapsed == nil {
+				update.ShowElapsed = boolPtr(showElapsed)
+			}
+			if update.ShowThroughput == nil {
+				update.ShowThroughput = boolPtr(showThroughput)
+			}
+			if update.ShowETA == nil {
+				update.ShowETA = boolPtr(showETA)
+			}
 			manager.UpdateBar(update)
 			manager.RenderAll()
 		}
@@ -193,24 +217,25 @@ func main() {
 		os.Exit(1)
 	}
 
-
-
 	// Validate and get ANSI color codes
 	colorBarCode := pbar.GetColorCode(colorBarName)
 	colorTextCode := pbar.GetColorCode(colorTextName)
 
 	bar := &pbar.Bar{
-		Total:       total,
-		Current:     current,
-		Width:       width,
-		Style:       style,
-		ColorBar:    colorBarCode,
-		ColorText:   colorTextCode,
-		Finished:    current >= total,
-		StartTime:   startTime,
-		CustomChars: customChars,
-		Message:     message,
+		Total:             total,
+		Current:           current,
+		Width:             width,
+		Style:             style,
+		ColorBar:          colorBarCode,
+		ColorText:         colorTextCode,
+		Finished:          current >= total,
+		StartTime:         time.Now(),
+		CustomChars:       customChars,
+		Message:           message,
 		CompletionMessage: finishedMessage,
+		ShowElapsed:       showElapsed,
+		ShowThroughput:    showThroughput,
+		ShowETA:           showETA,
 	}
 
 	fmt.Print(bar.Render())

@@ -10,16 +10,19 @@ import (
 
 // Update represents an update for a single progress bar.
 type Update struct {
-	ID          string `json:"id"`
-	Current     int    `json:"current"`
-	Total       int    `json:"total"`
-	Width       int    `json:"width"`
-	Style       string `json:"style"`
-	ColorBar    string `json:"colorbar"`
-	ColorText   string `json:"colortext"`
-	Finished    bool   `json:"finished"`
-	CustomChars string `json:"chars"`
-	Message     string `json:"message"`
+	ID             string `json:"id"`
+	Current        int    `json:"current"`
+	Total          int    `json:"total"`
+	Width          int    `json:"width"`
+	Style          string `json:"style"`
+	ColorBar       string `json:"colorbar"`
+	ColorText      string `json:"colortext"`
+	Finished       bool   `json:"finished"`
+	CustomChars    string `json:"chars"`
+	Message        string `json:"message"`
+	ShowElapsed    *bool  `json:"showelapsed,omitempty"`
+	ShowThroughput *bool  `json:"showthroughput,omitempty"`
+	ShowETA        *bool  `json:"showeta,omitempty"`
 }
 
 // Manager manages multiple progress bars.
@@ -45,7 +48,10 @@ func (m *Manager) UpdateBar(update Update) {
 	bar, exists := m.bars[update.ID]
 	if !exists {
 		bar = &Bar{
-			StartTime: time.Now(),
+			StartTime:      time.Now(),
+			ShowElapsed:    true,
+			ShowThroughput: true,
+			ShowETA:        true,
 		}
 		m.bars[update.ID] = bar
 		m.order = append(m.order, update.ID)
@@ -76,6 +82,15 @@ func (m *Manager) UpdateBar(update Update) {
 		bar.CustomChars = update.CustomChars
 	}
 	bar.Message = update.Message
+	if update.ShowElapsed != nil {
+		bar.ShowElapsed = *update.ShowElapsed
+	}
+	if update.ShowThroughput != nil {
+		bar.ShowThroughput = *update.ShowThroughput
+	}
+	if update.ShowETA != nil {
+		bar.ShowETA = *update.ShowETA
+	}
 }
 
 // RenderAll renders all managed progress bars to the terminal.

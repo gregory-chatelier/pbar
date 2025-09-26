@@ -13,7 +13,7 @@ set -euo pipefail
 
 # --- Configuration ---
 PBAR_BIN="./pbar/main.exe" # Path to the pbar executable
-DEMO_SPEED=0.1    # Adjust for faster/slower demo (seconds per update)
+DEMO_SPEED=0.5    # Adjust for faster/slower demo (seconds per update)
 
 # --- Helper Functions ---
 
@@ -22,7 +22,7 @@ PBAR_COPROC_PID="" # Global to store the coproc PID
 
 # Function to clean up background processes and terminal on exit or interrupt
 cleanup() {
-  echo "\nCleaning up..."
+  echo -e "\nCleaning up..."
   if [ -n "$PBAR_PID" ]; then
     kill "$PBAR_PID" 2>/dev/null || true # Kill pbar if running
     wait "$PBAR_PID" 2>/dev/null || true # Wait for it to terminate
@@ -50,13 +50,51 @@ send_pbar_json_update() {
 
 # Function to display a section header
 section_header() {
-  echo -e "\n\033[1m--- $1 ---\033[0m\n"
+  echo -e "\n\033[1m--- $1 ---\033[0m"
   sleep 1
 }
 
 # --- Main Demo Logic ---
 
 clear # Clear the terminal for a clean demo start
+
+
+# Conditional Metadata Display
+section_header "Conditional Metadata (All Shown by Default)"
+for i in $(seq 0 5 100); do
+  "$PBAR_BIN" "$i" 100
+  sleep "$DEMO_SPEED"
+done
+sleep 0.5
+
+section_header "Conditional Metadata (Elapsed Hidden)"
+for i in $(seq 0 5 100); do
+  "$PBAR_BIN" --show-elapsed=false "$i" 100
+  sleep "$DEMO_SPEED"
+done
+sleep 0.5
+
+section_header "Conditional Metadata (Throughput Hidden)"
+for i in $(seq 0 5 100); do
+  "$PBAR_BIN" --show-throughput=false "$i" 100
+  sleep "$DEMO_SPEED"
+done
+sleep 0.5
+
+section_header "Conditional Metadata (ETA Hidden)"
+for i in $(seq 0 5 100); do
+  "$PBAR_BIN" --show-eta=false "$i" 100
+  sleep "$DEMO_SPEED"
+done
+sleep 0.5
+
+section_header "Conditional Metadata (All Hidden)"
+for i in $(seq 0 5 100); do
+  "$PBAR_BIN" --show-elapsed=false --show-throughput=false --show-eta=false "$i" 100
+  sleep "$DEMO_SPEED"
+done
+sleep 0.5
+
 
 # Default Spinner
 section_header "Default Spinner (Indeterminate)"
@@ -125,7 +163,7 @@ sleep 0.5
 # Custom Bar
 section_header "Custom Bar (chars='*.')"
 for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --style=custom --chars='*.' --colorbar=yellow "$i" 100
+  "$PBAR_BIN" --style=custom --chars='*.\' --colorbar=yellow "$i" 100
   sleep "$DEMO_SPEED"
 done
 sleep 0.5
@@ -137,7 +175,6 @@ for i in $(seq 0 10 100); do
   sleep "$DEMO_SPEED"
 done
 sleep 0.5
-
 
 sleep 2 # Allow final states to be displayed
 

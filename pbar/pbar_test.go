@@ -236,14 +236,14 @@ func TestBrailleBarFractional(t *testing.T) {
 
 func TestElapsedTime(t *testing.T) {
 	t.Run("displays elapsed time", func(t *testing.T) {
-		startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
-		bar := &Bar{
-			Total:     100,
-			Current:   50,
-			Width:     10,
-			StartTime: startTime,
-		}
-
+		        startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
+				bar := &Bar{
+					Total:     100,
+					Current:   50,
+					Width:     10,
+					StartTime: startTime,
+					ShowElapsed: true,
+				}
 		actual := bar.Render()
 
 		// We can't compare exact time, so we check if it contains "Elapsed X" where X is close to 5s
@@ -254,25 +254,79 @@ func TestElapsedTime(t *testing.T) {
 }
 
 func TestAverageThroughput(t *testing.T) {
-	t.Run("calculates average throughput and ETA", func(t *testing.T) {
-		startTime := time.Now()
+	// ... existing test ...
+}
+
+func TestConditionalMetadata(t *testing.T) {
+	t.Run("hides elapsed time", func(t *testing.T) {
+		startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
 		bar := &Bar{
 			Total:     100,
 			Current:   50,
 			Width:     10,
 			StartTime: startTime,
+			ShowElapsed: false,
+			ShowThroughput: true,
+			ShowETA: true,
 		}
-
-		// Introduce a small delay to ensure elapsed time is non-zero
-		time.Sleep(10 * time.Millisecond)
-
+		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
 		actual := bar.Render()
-
+		if strings.Contains(actual, "Elapsed") {
+			t.Errorf("Expected no Elapsed time, but got '%s'", actual)
+		}
 		if !strings.Contains(actual, "it/s") {
-			t.Errorf("Expected output to contain throughput (it/s), but got '%s'", actual)
+			t.Errorf("Expected throughput, but got '%s'", actual)
 		}
 		if !strings.Contains(actual, "ETA") {
-			t.Errorf("Expected output to contain ETA, but got '%s'", actual)
+			t.Errorf("Expected ETA, but got '%s'", actual)
+		}
+	})
+
+	t.Run("hides throughput", func(t *testing.T) {
+		startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
+		bar := &Bar{
+			Total:     100,
+			Current:   50,
+			Width:     10,
+			StartTime: startTime,
+			ShowElapsed: true,
+			ShowThroughput: false,
+			ShowETA: true,
+		}
+		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
+		actual := bar.Render()
+		if !strings.Contains(actual, "Elapsed") {
+			t.Errorf("Expected Elapsed time, but got '%s'", actual)
+		}
+		if strings.Contains(actual, "it/s") {
+			t.Errorf("Expected no throughput, but got '%s'", actual)
+		}
+		if !strings.Contains(actual, "ETA") {
+			t.Errorf("Expected ETA, but got '%s'", actual)
+		}
+	})
+
+	t.Run("hides ETA", func(t *testing.T) {
+		startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
+		bar := &Bar{
+			Total:     100,
+			Current:   50,
+			Width:     10,
+			StartTime: startTime,
+			ShowElapsed: true,
+			ShowThroughput: true,
+			ShowETA: false,
+		}
+		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
+		actual := bar.Render()
+		if !strings.Contains(actual, "Elapsed") {
+			t.Errorf("Expected Elapsed time, but got '%s'", actual)
+		}
+		if !strings.Contains(actual, "it/s") {
+			t.Errorf("Expected throughput, but got '%s'", actual)
+		}
+		if strings.Contains(actual, "ETA") {
+			t.Errorf("Expected no ETA, but got '%s'", actual)
 		}
 	})
 }
@@ -459,17 +513,9 @@ func TestBarEdgeCases(t *testing.T) {
 }
 
 func TestSmartMetadataEdgeCases(t *testing.T) {
-	t.Run("elapsed time with zero start time", func(t *testing.T) {
-		bar := &Bar{Total: 100, Current: 50, Width: 10}
-		actual := bar.Render()
-		if strings.Contains(actual, "Elapsed") {
-			t.Errorf("Expected no Elapsed time, got '%s'", actual)
-		}
-	})
-
 	t.Run("throughput with zero current", func(t *testing.T) {
 		startTime := time.Now().Add(-time.Second) // Ensure non-zero elapsed time
-		bar := &Bar{Total: 100, Current: 0, Width: 10, StartTime: startTime}
+		bar := &Bar{Total: 100, Current: 0, Width: 10, StartTime: startTime, ShowElapsed: true, ShowThroughput: true, ShowETA: true}
 		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
 		actual := bar.Render()
 		if !strings.Contains(actual, "0.00 it/s") {
@@ -479,7 +525,7 @@ func TestSmartMetadataEdgeCases(t *testing.T) {
 
 	t.Run("throughput with zero total", func(t *testing.T) {
 		startTime := time.Now().Add(-time.Second) // Ensure non-zero elapsed time
-		bar := &Bar{Total: 0, Current: 50, Width: 10, StartTime: startTime}
+		bar := &Bar{Total: 0, Current: 50, Width: 10, StartTime: startTime, ShowElapsed: true, ShowThroughput: true, ShowETA: true}
 		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
 		actual := bar.Render()
 		if !strings.Contains(actual, "0.00 it/s") {
@@ -489,7 +535,7 @@ func TestSmartMetadataEdgeCases(t *testing.T) {
 
 	t.Run("ETA with current equals total", func(t *testing.T) {
 		startTime := time.Now().Add(-time.Second) // Ensure non-zero elapsed time
-		bar := &Bar{Total: 100, Current: 100, Width: 10, StartTime: startTime}
+		bar := &Bar{Total: 100, Current: 100, Width: 10, StartTime: startTime, ShowElapsed: true, ShowThroughput: true, ShowETA: true}
 		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
 		actual := bar.Render()
 		if !strings.Contains(actual, "ETA 0s") {
@@ -579,6 +625,9 @@ func TestLongDurations(t *testing.T) {
 			Current:   50,
 			Width:     10,
 			StartTime: time.Now().Add(-24 * 30 * time.Hour), // ~1 month ago
+			ShowElapsed: true,
+			ShowThroughput: true,
+			ShowETA: true,
 		}
 		actual := bar.Render()
 		if !strings.Contains(actual, "720h") {

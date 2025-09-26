@@ -3,11 +3,11 @@ package pbar
 import (
 	"errors"
 	"fmt"
-	"strings"
-	"time"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"time"
 )
 
 const (
@@ -52,10 +52,10 @@ var brailleChars = []string{
 }
 
 var validStyles = map[string]bool{
-	"classic": true,
-	"block":   true,
-	"spinner": true,
-	"arrow":   true,
+	"classic":         true,
+	"block":           true,
+	"spinner":         true,
+	"arrow":           true,
 	"braille":         true,
 	"braille-spinner": true,
 	"custom":          true,
@@ -76,12 +76,20 @@ type Bar struct {
 	CustomChars       string
 	Message           string
 	CompletionMessage string
+	ShowElapsed       bool
+	ShowThroughput    bool
+	ShowETA           bool
 	spinnerState      int
 	TestMode          bool
 }
 
 // Render generates the string representation of the progress bar.
 func (b *Bar) Render() string {
+	// On the first render, add a small delay to allow for throughput and ETA calculation
+	if b.LastUpdateTime.IsZero() {
+		time.Sleep(10 * time.Millisecond)
+	}
+
 	// Update LastUpdateTime
 	b.LastUpdateTime = time.Now()
 
@@ -141,18 +149,40 @@ func (b *Bar) Render() string {
 			}
 			averageThroughput := totalThroughput / float64(len(b.ThroughputHistory))
 
-			throughputStr = fmt.Sprintf(" %.2f it/s", averageThroughput)
+			if b.ShowThroughput {
+				throughputStr = fmt.Sprintf("%.2f it/s", averageThroughput)
+			}
 
 			// Calculate ETA based on average throughput
 			remainingItems := float64(b.Total - b.Current)
-			if averageThroughput > 0 {
-				eta := time.Duration(remainingItems / averageThroughput * float64(time.Second))
-				etaStr = fmt.Sprintf(" ETA %s", formatDuration(eta))
-			} else {
-				etaStr = " ETA Inf"
+			if remainingItems < 0 {
+				remainingItems = 0
+			}
+
+			if b.ShowETA {
+				if remainingItems == 0 {
+					etaStr = "ETA 0s"
+				} else if averageThroughput > 0 {
+					eta := time.Duration(remainingItems / averageThroughput * float64(time.Second))
+					etaStr = fmt.Sprintf("ETA %s", formatDuration(eta))
+				} else {
+					etaStr = "ETA Inf"
+				}
 			}
 		}
-		metadataString = fmt.Sprintf(" Elapsed %s%s%s", elapsedTimeStr, throughputStr, etaStr)
+		var metadataParts []string
+		if b.ShowElapsed {
+			metadataParts = append(metadataParts, fmt.Sprintf("Elapsed %s", elapsedTimeStr))
+		}
+		if b.ShowThroughput && throughputStr != "" {
+			metadataParts = append(metadataParts, throughputStr)
+		}
+		if b.ShowETA && etaStr != "" {
+			metadataParts = append(metadataParts, etaStr)
+		}
+		if len(metadataParts) > 0 {
+			metadataString = " " + strings.Join(metadataParts, " ")
+		}
 	}
 
 	if b.Message != "" {
@@ -254,10 +284,10 @@ func (b *Bar) Render() string {
 	}
 
 	result := fmt.Sprintf("%s %s%s", barString, percentString, metadataString)
-	
+
 	// Add carriage return for inline updates
 	result = "\r" + result + "\x1b[K"
-	
+
 	return result
 }
 
@@ -414,6 +444,10 @@ func (b *Bar) renderBrailleBar(colorCode string) string {
 }
 
 func formatDuration(d time.Duration) string {
+	if d < time.Second {
+		return fmt.Sprintf("%dms", d.Milliseconds())
+	}
+
 	seconds := int(d.Seconds())
 	hours := seconds / 3600
 	minutes := (seconds % 3600) / 60
