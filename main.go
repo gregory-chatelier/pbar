@@ -221,10 +221,20 @@ func main() {
 	colorBarCode := pbar.GetColorCode(colorBarName)
 	colorTextCode := pbar.GetColorCode(colorTextName)
 
-	bar, err := pbar.LoadState()
-	if err != nil {
+	var bar *pbar.Bar
+	if current == 0 {
+		// If current is 0, it's a new progress bar, so initialize a fresh state
 		bar = &pbar.Bar{}
 		bar.StartTime = time.Now()
+		pbar.DeleteState() // Ensure no old state interferes
+	} else {
+		// Otherwise, try to load the existing state
+		loadedBar, err := pbar.LoadState()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Expected existing progress bar state but none found: %v\n", err)
+			os.Exit(1)
+		}
+		bar = loadedBar
 	}
 
 	bar.Total = total

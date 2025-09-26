@@ -45,7 +45,7 @@ func TestBlockBar(t *testing.T) {
 func TestSpinner(t *testing.T) {
 	t.Run("renders a spinner that cycles through characters", func(t *testing.T) {
 		bar := &Bar{
-			Style:   "spinner",
+			Style:    "spinner",
 			TestMode: true,
 		}
 
@@ -58,7 +58,7 @@ func TestSpinner(t *testing.T) {
 		}
 
 		for i, expected := range expectations {
-			bar.spinnerState = i // Manually set state for predictability
+			bar.SpinnerState = i // Manually set state for predictability
 			actual := bar.Render()
 			if actual != expected {
 				t.Errorf("Expected '%s', but got '%s'", expected, actual)
@@ -70,7 +70,7 @@ func TestSpinner(t *testing.T) {
 func TestBrailleSpinner(t *testing.T) {
 	t.Run("renders a braille spinner that cycles through characters", func(t *testing.T) {
 		bar := &Bar{
-			Style:   "braille-spinner",
+			Style:    "braille-spinner",
 			TestMode: true,
 		}
 
@@ -88,7 +88,7 @@ func TestBrailleSpinner(t *testing.T) {
 		}
 
 		for i, expected := range expectations {
-			bar.spinnerState = i // Manually set state for predictability
+			bar.SpinnerState = i // Manually set state for predictability
 			actual := bar.Render()
 			if actual != expected {
 				t.Errorf("Expected '%s', but got '%s'", expected, actual)
@@ -112,7 +112,7 @@ func TestIndeterminateMode(t *testing.T) {
 		}
 
 		for i, expected := range expectations {
-			bar.spinnerState = i // Manually set state for predictability
+			bar.SpinnerState = i // Manually set state for predictability
 			actual := bar.Render()
 			if actual != expected {
 				t.Errorf("Expected '%s', but got '%s'", expected, actual)
@@ -178,8 +178,6 @@ func TestFinishedState(t *testing.T) {
 	})
 }
 
-
-
 func TestArrowBar(t *testing.T) {
 	t.Run("renders an arrow bar at 50%", func(t *testing.T) {
 		bar := &Bar{
@@ -236,14 +234,14 @@ func TestBrailleBarFractional(t *testing.T) {
 
 func TestElapsedTime(t *testing.T) {
 	t.Run("displays elapsed time", func(t *testing.T) {
-		        startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
-				bar := &Bar{
-					Total:     100,
-					Current:   50,
-					Width:     10,
-					StartTime: startTime,
-					ShowElapsed: true,
-				}
+		startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
+		bar := &Bar{
+			Total:       100,
+			Current:     50,
+			Width:       10,
+			StartTime:   startTime,
+			ShowElapsed: true,
+		}
 		actual := bar.Render()
 
 		// We can't compare exact time, so we check if it contains "Elapsed X" where X is close to 5s
@@ -261,13 +259,13 @@ func TestConditionalMetadata(t *testing.T) {
 	t.Run("hides elapsed time", func(t *testing.T) {
 		startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
 		bar := &Bar{
-			Total:     100,
-			Current:   50,
-			Width:     10,
-			StartTime: startTime,
-			ShowElapsed: false,
+			Total:          100,
+			Current:        50,
+			Width:          10,
+			StartTime:      startTime,
+			ShowElapsed:    false,
 			ShowThroughput: true,
-			ShowETA: true,
+			ShowETA:        true,
 		}
 		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
 		actual := bar.Render()
@@ -285,13 +283,13 @@ func TestConditionalMetadata(t *testing.T) {
 	t.Run("hides throughput", func(t *testing.T) {
 		startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
 		bar := &Bar{
-			Total:     100,
-			Current:   50,
-			Width:     10,
-			StartTime: startTime,
-			ShowElapsed: true,
+			Total:          100,
+			Current:        50,
+			Width:          10,
+			StartTime:      startTime,
+			ShowElapsed:    true,
 			ShowThroughput: false,
-			ShowETA: true,
+			ShowETA:        true,
 		}
 		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
 		actual := bar.Render()
@@ -309,13 +307,13 @@ func TestConditionalMetadata(t *testing.T) {
 	t.Run("hides ETA", func(t *testing.T) {
 		startTime := time.Now().Add(-5 * time.Second) // 5 seconds ago
 		bar := &Bar{
-			Total:     100,
-			Current:   50,
-			Width:     10,
-			StartTime: startTime,
-			ShowElapsed: true,
+			Total:          100,
+			Current:        50,
+			Width:          10,
+			StartTime:      startTime,
+			ShowElapsed:    true,
 			ShowThroughput: true,
-			ShowETA: false,
+			ShowETA:        false,
 		}
 		time.Sleep(10 * time.Millisecond) // Ensure elapsed time is non-zero
 		actual := bar.Render()
@@ -621,13 +619,13 @@ func TestThroughputHistory(t *testing.T) {
 func TestLongDurations(t *testing.T) {
 	t.Run("very long elapsed time", func(t *testing.T) {
 		bar := &Bar{
-			Total:     100,
-			Current:   50,
-			Width:     10,
-			StartTime: time.Now().Add(-24 * 30 * time.Hour), // ~1 month ago
-			ShowElapsed: true,
+			Total:          100,
+			Current:        50,
+			Width:          10,
+			StartTime:      time.Now().Add(-24 * 30 * time.Hour), // ~1 month ago
+			ShowElapsed:    true,
 			ShowThroughput: true,
-			ShowETA: true,
+			ShowETA:        true,
 		}
 		actual := bar.Render()
 		if !strings.Contains(actual, "720h") {

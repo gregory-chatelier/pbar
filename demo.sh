@@ -74,107 +74,107 @@ for i in $(seq 0 5 100); do
 done
 sleep 0.5
 
-section_header "Conditional Metadata (Throughput Hidden)"
-for i in $(seq 0 5 100); do
-  "$PBAR_BIN" --show-throughput=false "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# section_header "Conditional Metadata (Throughput Hidden)"
+# for i in $(seq 0 5 100); do
+#   "$PBAR_BIN" --show-throughput=false "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-section_header "Conditional Metadata (ETA Hidden)"
-for i in $(seq 0 5 100); do
-  "$PBAR_BIN" --show-eta=false "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# section_header "Conditional Metadata (ETA Hidden)"
+# for i in $(seq 0 5 100); do
+#   "$PBAR_BIN" --show-eta=false "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-section_header "Conditional Metadata (All Hidden)"
-for i in $(seq 0 5 100); do
-  "$PBAR_BIN" --show-elapsed=false --show-throughput=false --show-eta=false "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# section_header "Conditional Metadata (All Hidden)"
+# for i in $(seq 0 5 100); do
+#   "$PBAR_BIN" --show-elapsed=false --show-throughput=false --show-eta=false "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
 
-# Default Spinner
-section_header "Default Spinner (Indeterminate)"
-for i in $(seq 0 5 100); do
-  "$PBAR_BIN" --style=spinner "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Default Spinner
+# section_header "Default Spinner (Indeterminate)"
+# for i in $(seq 0 5 100); do
+#   "$PBAR_BIN" --style=spinner "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-# Braille Spinner
-section_header "Braille Spinner"
-for i in $(seq 0 5 100); do
-  "$PBAR_BIN" --style=braille-spinner "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Braille Spinner
+# section_header "Braille Spinner"
+# for i in $(seq 0 5 100); do
+#   "$PBAR_BIN" --style=braille-spinner "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-# Finished State
-section_header "Finished State"
-for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --finished-message="Done!" "$i" 100
-sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Finished State
+# section_header "Finished State"
+# for i in $(seq 0 10 100); do
+#   "$PBAR_BIN" --finished-message="Done!" "$i" 100
+# sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-# Message Bar
-section_header "Message Bar"
-for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --message="Processing item $i..." "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Message Bar
+# section_header "Message Bar"
+# for i in $(seq 0 10 100); do
+#   "$PBAR_BIN" --message="Processing item $i..." "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-# Classic Bar
-section_header "Classic Bar"
-for i in $(seq 0 10 100); do
-  "$PBAR_BIN" "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Classic Bar
+# section_header "Classic Bar"
+# for i in $(seq 0 10 100); do
+#   "$PBAR_BIN" "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-# Block Bar
-section_header "Block Bar"
-for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --style=block "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Block Bar
+# section_header "Block Bar"
+# for i in $(seq 0 10 100); do
+#   "$PBAR_BIN" --style=block "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-# Arrow Bar
-section_header "Arrow Bar"
-for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --style=arrow "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Arrow Bar
+# section_header "Arrow Bar"
+# for i in $(seq 0 10 100); do
+#   "$PBAR_BIN" --style=arrow "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-# Braille Bar
-section_header "Braille Bar"
-for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --style=braille "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Braille Bar
+# section_header "Braille Bar"
+# for i in $(seq 0 10 100); do
+#   "$PBAR_BIN" --style=braille "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-# Custom Bar
-section_header "Custom Bar (chars='*.')"
-for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --style=custom --chars='*.\' --colorbar=yellow "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Custom Bar
+# section_header "Custom Bar (chars='*.')"
+# for i in $(seq 0 10 100); do
+#   "$PBAR_BIN" --style=custom --chars='*.\' --colorbar=yellow "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-# Color Support
-section_header "Color Support (Bar: Green, Text: Yellow)"
-for i in $(seq 0 10 100); do
-  "$PBAR_BIN" --colorbar=green --colortext=yellow "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# # Color Support
+# section_header "Color Support (Bar: Green, Text: Yellow)"
+# for i in $(seq 0 10 100); do
+#   "$PBAR_BIN" --colorbar=green --colortext=yellow "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
 sleep 2 # Allow final states to be displayed
 
