@@ -1,11 +1,11 @@
 package pbar
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -17,23 +17,36 @@ const (
 	stateFileName            = ".pbar.state"
 )
 
-func getSpinnerState() int {
-	stateFile := filepath.Join(os.TempDir(), stateFileName)
-	data, err := os.ReadFile(stateFile)
-	if err != nil {
-		// If the file doesn't exist, create it with initial state 0
-		if os.IsNotExist(err) {
-			os.WriteFile(stateFile, []byte("0"), 0644)
-		}
-		return 0
-	}
-	state, _ := strconv.Atoi(string(data))
-	return state
+func getStateFile() string {
+	return filepath.Join(os.TempDir(), stateFileName)
 }
 
-func setSpinnerState(state int) {
-	stateFile := filepath.Join(os.TempDir(), stateFileName)
-	os.WriteFile(stateFile, []byte(strconv.Itoa(state)), 0644)
+// SaveState saves the bar state to a file.
+func SaveState(b *Bar) error {
+	data, err := json.Marshal(b)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(getStateFile(), data, 0644)
+}
+
+// LoadState loads the bar state from a file.
+func LoadState() (*Bar, error) {
+	data, err := os.ReadFile(getStateFile())
+	if err != nil {
+		return nil, err
+	}
+	var b Bar
+	err = json.Unmarshal(data, &b)
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
+}
+
+// DeleteState removes the state file.
+func DeleteState() error {
+	return os.Remove(getStateFile())
 }
 
 var spinnerChars = []string{"|", "/", "-", "\\"}
@@ -65,6 +78,7 @@ var validStyles = map[string]bool{
 type Bar struct {
 	Total             int
 	Current           int
+	PreviousCurrent   int
 	Width             int
 	Style             string
 	ColorBar          string // Now stores ANSI escape code directly
@@ -79,7 +93,7 @@ type Bar struct {
 	ShowElapsed       bool
 	ShowThroughput    bool
 	ShowETA           bool
-	spinnerState      int
+	SpinnerState      int
 	TestMode          bool
 }
 
@@ -89,9 +103,6 @@ func (b *Bar) Render() string {
 	if b.LastUpdateTime.IsZero() {
 		time.Sleep(10 * time.Millisecond)
 	}
-
-	// Update LastUpdateTime
-	b.LastUpdateTime = time.Now()
 
 	// Ensure Total is not negative
 	if b.Total < 0 {
@@ -129,9 +140,11 @@ func (b *Bar) Render() string {
 		// Calculate throughput and ETA only if not indeterminate and elapsed time is non-zero
 		isIndeterminate := b.Style == "spinner" || b.Style == "braille-spinner"
 		if !isIndeterminate && elapsedTime.Seconds() > 0 {
+			deltaCurrent := b.Current - b.PreviousCurrent
+			deltaTime := time.Since(b.LastUpdateTime).Seconds()
 			var currentThroughput float64
-			if b.Total > 0 && b.Current > 0 {
-				currentThroughput = float64(b.Current) / elapsedTime.Seconds()
+			if deltaTime > 0 {
+				currentThroughput = float64(deltaCurrent) / deltaTime
 			} else {
 				currentThroughput = 0
 			}
@@ -201,20 +214,14 @@ func (b *Bar) Render() string {
 
 	isIndeterminate := b.Style == "spinner" || b.Style == "braille-spinner"
 	if isIndeterminate {
-		if !b.TestMode {
-			b.spinnerState = getSpinnerState()
-		}
 		var char string
 		switch b.Style {
 		case "braille-spinner":
-			char = brailleSpinnerChars[b.spinnerState%len(brailleSpinnerChars)]
+			char = brailleSpinnerChars[b.SpinnerState%len(brailleSpinnerChars)]
 		default:
-			char = spinnerChars[b.spinnerState%len(spinnerChars)]
+			char = spinnerChars[b.SpinnerState%len(spinnerChars)]
 		}
-		b.spinnerState++
-		if !b.TestMode {
-			setSpinnerState(b.spinnerState)
-		}
+		b.SpinnerState++
 		result := fmt.Sprintf("[%s]%s", char, metadataString)
 		if b.ColorText != "" {
 			result = fmt.Sprintf("[%s%s%s]%s", b.ColorText, char, "\x1b[0m", metadataString)
@@ -231,27 +238,15 @@ func (b *Bar) Render() string {
 	var barString string
 	switch style {
 	case "spinner":
-		if !b.TestMode {
-			b.spinnerState = getSpinnerState()
-		}
-		char := spinnerChars[b.spinnerState%len(spinnerChars)]
-		b.spinnerState++
-		if !b.TestMode {
-			setSpinnerState(b.spinnerState)
-		}
+		char := spinnerChars[b.SpinnerState%len(spinnerChars)]
+		b.SpinnerState++
 		barString = fmt.Sprintf("[%s]", char)
 		if b.ColorText != "" {
 			barString = fmt.Sprintf("[%s%s%s]", b.ColorText, char, "\x1b[0m")
 		}
 	case "braille-spinner":
-		if !b.TestMode {
-			b.spinnerState = getSpinnerState()
-		}
-		char := brailleSpinnerChars[b.spinnerState%len(brailleSpinnerChars)]
-		b.spinnerState++
-		if !b.TestMode {
-			setSpinnerState(b.spinnerState)
-		}
+		char := brailleSpinnerChars[b.SpinnerState%len(brailleSpinnerChars)]
+		b.SpinnerState++
 		barString = fmt.Sprintf("[%s]", char)
 		if b.ColorText != "" {
 			barString = fmt.Sprintf("[%s%s%s]", b.ColorText, char, "\x1b[0m")

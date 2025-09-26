@@ -221,24 +221,35 @@ func main() {
 	colorBarCode := pbar.GetColorCode(colorBarName)
 	colorTextCode := pbar.GetColorCode(colorTextName)
 
-	bar := &pbar.Bar{
-		Total:             total,
-		Current:           current,
-		Width:             width,
-		Style:             style,
-		ColorBar:          colorBarCode,
-		ColorText:         colorTextCode,
-		Finished:          current >= total,
-		StartTime:         time.Now(),
-		CustomChars:       customChars,
-		Message:           message,
-		CompletionMessage: finishedMessage,
-		ShowElapsed:       showElapsed,
-		ShowThroughput:    showThroughput,
-		ShowETA:           showETA,
+	bar, err := pbar.LoadState()
+	if err != nil {
+		bar = &pbar.Bar{}
+		bar.StartTime = time.Now()
 	}
 
+	bar.Total = total
+	bar.PreviousCurrent = bar.Current
+	bar.Current = current
+	bar.Width = width
+	bar.Style = style
+	bar.ColorBar = colorBarCode
+	bar.ColorText = colorTextCode
+	bar.Finished = current >= total
+	bar.CustomChars = customChars
+	bar.Message = message
+	bar.CompletionMessage = finishedMessage
+	bar.ShowElapsed = showElapsed
+	bar.ShowThroughput = showThroughput
+	bar.ShowETA = showETA
+
 	fmt.Print(bar.Render())
+
+	if bar.Finished {
+		pbar.DeleteState()
+	} else {
+		bar.LastUpdateTime = time.Now()
+		pbar.SaveState(bar)
+	}
 
 	// Exit with an error code if current > total (unless finished)
 	isIndeterminate := style == "spinner" || style == "braille-spinner"
