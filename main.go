@@ -84,9 +84,9 @@ func main() {
 
 	// Define flags
 	flag.IntVar(&width, "width", defaultWidth, "Width of the progress bar")
-	flag.StringVar(&style, "style", defaultStyle, "Style of the progress bar (classic, block, spinner, arrow, braille, custom)")
+	flag.StringVar(&style, "style", defaultStyle, "Style of the progress bar (classic, block, spinner, arrow, braille, custom, braille-spinner)")
 	flag.StringVar(&colorBarName, "colorbar", "", fmt.Sprintf("Color for the bar. Available: %s", pbar.GetAvailableColors()))
-	flag.StringVar(&colorTextName, "colortext", "", fmt.Sprintf("Color for the bar. Available: %s", pbar.GetAvailableColors()))
+	flag.StringVar(&colorTextName, "colortext", "", fmt.Sprintf("Color for the text. Available: %s", pbar.GetAvailableColors()))
 	flag.StringVar(&finishedMessage, "finished-message", "", "Message to display when the progress bar is complete")
 	flag.BoolVar(&version, "version", false, "Print version information")
 	flag.StringVar(&customChars, "chars", "", "Custom characters for the progress bar (e.g., '#=')")
