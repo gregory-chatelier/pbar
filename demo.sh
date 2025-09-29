@@ -7,11 +7,11 @@
 set -euo pipefail
 
 # --- Configuration ---
-PBAR_BIN="./pbar/main.exe" # Path to the pbar executable
+PBAR_BIN="./dist/pbar-linux-amd64" # Path to the pbar executable
 # if [ -f "./pbar" ]; then
 #     PBAR_BIN="./pbar"
 # fi
-DEMO_SPEED=0.02    # Adjust for faster/slower demo (seconds per update)
+DEMO_SPEED=0.06    # Adjust for faster/slower demo (seconds per update)
 
 # --- 80s Retro Colors ---
 C_BLACK='\033[0;30m'
@@ -37,9 +37,9 @@ C_RESET='\033[0m'
 
 # Function to clean up background processes and terminal on exit or interrupt
 cleanup() {
-  echo -e "\n${C_BOLD}${C_BRIGHT_RED}Cleaning up...${C_RESET}"
+  # echo -e "\n${C_BOLD}${C_BRIGHT_RED}Cleaning up...${C_RESET}"
   echo -e "\033[?25h" # Show cursor
-  echo -e "${C_BOLD}${C_BRIGHT_GREEN}Demo finished.${C_RESET}"
+  # echo -e "${C_BOLD}${C_BRIGHT_GREEN}Demo finished.${C_RESET}"
 }
 
 # Trap SIGINT (Ctrl+C) and SIGTERM to call the cleanup function

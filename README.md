@@ -10,41 +10,61 @@ When running long-duration scripts, it's crucial to provide visual feedback to t
 
 ## Command Reference
 
-`pbar` accepts `current` and `total` as positional arguments, and uses flags for customization.
+`pbar` accepts `current` item number and `total` item number as positional arguments, and uses flags for customization.
+
+### Basic Renderer
+
+Show 25% completion progress, 25th item out of 100.
+
+```bash
+pbar 25 100
+```
+
+### Task Progress
+
+Integrate `pbar` into your task loop for the animation to run.
+
+```bash
+for i in {1..100}; do
+  sleep 0.1
+  pbar $i 100 --style=block --colorbar=green
+done
+```
+
+To experience `pbar` in action showcasing various styles, colors, and the powerful parallel mode, run the `demo.sh` script:
+
+```bash
+bash demo.sh
+```
+
+**Note on Compatibility:** Set the path to the executable in the demo script before running
+
+<div style="display: flex; justify-content: flex-start;">
+<video src="demo-record.mp4" loop autoplay muted playsinline style="max-width: 100%; height: auto;"></video>
+</div>
+
 
 ### Advanced Features
 
 - **Metadata Display**: Control the visibility of elapsed time, throughput, and estimated time remaining.
     - **Example (Hide all metadata)**: `pbar 50 100 --show-elapsed=false --show-throughput=false --show-eta=false`
 - **Color Support**: Allows users to set colors for the bar, background, and text for a high-impact visual style.
-    - **Example**: `pbar 75 100 --color-bar=green --color-text=yellow`
+    - **Example**: `pbar 75 100 --colorbar=green --colortext=yellow`
 - **Finished State**: Defines a distinct appearance for the bar upon completion (e.g., a checkmark and a solid color) to provide clear visual confirmation.
     - **Example**: On completion, the bar could change to `[✔] Download Complete! 100%`.
 - **Indeterminate Mode**: For tasks where the total is unknown, a special mode displays an animated indicator (e.g., a spinner) without a percentage.
-    - **Example**: `my_command | pbar --indeterminate`
-- **Parallel Mode**: Supports rendering multiple progress bars simultaneously, each updated via a stream of JSON objects from standard input. This is ideal for orchestrating complex, concurrent tasks.
+  
+    - **Example**: `pbar --style=spinner`
+- **Parallel Mode**: Supports rendering multiple progress bars simultaneously, each updated via a stream of JSON objects from standard input. This is useful for orchestrating complex, concurrent tasks.
+  
     - **Usage**: Activate with the `--parallel` flag. Input is a stream of JSON objects, one per line, each representing an update for a specific bar.
     - **Example Input (JSON per line)**:
+      
         ```json
         {"id": "File1.zip", "current": 10, "total": 100, "message": "Downloading File1.zip", "style": "block", "colorbar": "green"}
         {"id": "File2.iso", "current": 5, "total": 80, "message": "Downloading File2.iso", "style": "block", "colorbar": "cyan"}
         {"id": "File3.tar.gz", "current": 2, "total": 60, "message": "Downloading File3.tar.gz", "style": "block", "colorbar": "magenta"}
         ```
-
-### Panel of Styles
-
-## Demonstration Script (`demo.sh`)
-
-To experience `pbar` in action with a retro 80's look and feel, showcasing various styles, colors, and the powerful parallel mode, run the `demo.sh` script:
-
-```bash
-bash demo.sh
-```
-
-**Note on Windows Compatibility:** The `demo.sh` script is designed for Unix-like environments (Linux, macOS, WSL, Git Bash). If you are running Git Bash on Windows and encounter `command not found` errors for `pbar.exe`, you might need to adjust your environment. Potential workarounds include:
-
-*   Adding the current directory to your `PATH` temporarily: `export PATH=$PATH:.`
-*   Using `winpty` for individual `pbar` calls if your terminal supports it (e.g., `winpty ./pbar.exe 50 100`).
 
 ## Installation
 
@@ -82,43 +102,6 @@ If you have Go installed (Go 1.24+ is required):
 
 ```bash
 go install github.com/gregory-chatelier/pbar@latest
-```
-
-## Common Usage
-
-### Basic Progress
-
-Show 25% completion out of 100.
-
-```bash
-pbar 25 100
-```
-
-### Looping Progress
-
-Integrate `pbar` into a Bash loop.
-
-```bash
-for i in {1..100}; do
-  sleep 0.1
-  pbar $i 100 --style=block --colorbar=green
-done
-```
-
-### Indeterminate Progress
-
-For tasks where the total is unknown.
-
-```bash
-my_long_command | pbar --indeterminate --colortext=cyan
-```
-
-### Custom Bar Characters
-
-Use your own characters for the progress bar.
-
-```bash
-pbar 70 100 --style=custom --chars="█ " --colorbar=magenta
 ```
 
 ## License
