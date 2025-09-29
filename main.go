@@ -197,19 +197,18 @@ func main() {
 	instanceID := generateInstanceID(explicitInstanceID)
 
 	var bar *pbar.Bar
-	if current == 0 {
-		// If current is 0, it's a new progress bar, so initialize a fresh state
+	if current > 0 {
+		loadedBar, err := pbar.LoadState(instanceID)
+		if err == nil {
+			bar = loadedBar
+		}
+	}
+
+	if bar == nil {
+		// If state was not loaded or current is 0, create a new bar
 		bar = &pbar.Bar{}
 		bar.StartTime = time.Now()
 		pbar.DeleteState(instanceID) // Ensure no old state interferes
-	} else {
-		// Otherwise, try to load the existing state
-		loadedBar, err := pbar.LoadState(instanceID)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: Expected existing progress bar state for ID '%s' but none found: %v\n", instanceID, err)
-			os.Exit(1)
-		}
-		bar = loadedBar
 	}
 
 	bar.Total = total
