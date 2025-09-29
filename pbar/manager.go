@@ -122,16 +122,11 @@ func (m *Manager) Clear() {
 // clearLines moves the cursor up and clears the lines.
 func (m *Manager) clearLines() {
 	if m.lastLines > 0 {
-		// Move cursor up by lastLines
-		fmt.Printf("\033[%dA", m.lastLines)
-		// Clear each line
 		for i := 0; i < m.lastLines; i++ {
-			fmt.Print("\033[K") // Clear from cursor to end of line
+			fmt.Print("\r\033[K") // Carriage return, clear to end of line
 			if i < m.lastLines-1 {
-				fmt.Print("\n") // Move to next line, but not after the last one
+				fmt.Print("\033[A") // Move up one line
 			}
 		}
-		// Move cursor back up to the start of the first cleared line
-		fmt.Printf("\033[%dA", m.lastLines-1)
 	}
 }
