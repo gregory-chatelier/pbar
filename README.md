@@ -14,6 +14,8 @@ When running long-duration scripts, it's crucial to provide visual feedback to t
 
 ### Advanced Features
 
+- **Metadata Display**: Control the visibility of elapsed time, throughput, and estimated time remaining.
+    - **Example (Hide all metadata)**: `pbar 50 100 --show-elapsed=false --show-throughput=false --show-eta=false`
 - **Color Support**: Allows users to set colors for the bar, background, and text for a high-impact visual style.
     - **Example**: `pbar 75 100 --color-bar=green --color-text=yellow`
 - **Finished State**: Defines a distinct appearance for the bar upon completion (e.g., a checkmark and a solid color) to provide clear visual confirmation.
@@ -24,17 +26,16 @@ When running long-duration scripts, it's crucial to provide visual feedback to t
     - **Usage**: Activate with the `--parallel` flag. Input is a stream of JSON objects, one per line, each representing an update for a specific bar.
     - **Example Input (JSON per line)**:
         ```json
-        {"id": "task1", "current": 10, "total": 100, "message": "Processing task 1..."}
-        {"id": "task2", "current": 25, "total": 50, "style": "block", "colorBar": "blue"}
-        {"id": "task1", "current": 20, "total": 100}
-        {"id": "task2", "finished": true, "message": "Task 2 complete!"}
+        {"id": "File1.zip", "current": 10, "total": 100, "message": "Downloading File1.zip", "style": "block", "colorbar": "green"}
+        {"id": "File2.iso", "current": 5, "total": 80, "message": "Downloading File2.iso", "style": "block", "colorbar": "cyan"}
+        {"id": "File3.tar.gz", "current": 2, "total": 60, "message": "Downloading File3.tar.gz", "style": "block", "colorbar": "magenta"}
         ```
 
 ### Panel of Styles
 
 ## Demonstration Script (`demo.sh`)
 
-To see `pbar` in action, including its various styles and the parallel mode, run the `demo.sh` script:
+To experience `pbar` in action with a retro 80's look and feel, showcasing various styles, colors, and the powerful parallel mode, run the `demo.sh` script:
 
 ```bash
 bash demo.sh
