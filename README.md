@@ -39,10 +39,7 @@ bash demo.sh
 
 **Note on Compatibility:** Set the path to the executable in the demo script before running
 
-<div style="display: flex; justify-content: flex-start;">
-<video src="demo-record.mp4" loop autoplay muted playsinline style="max-width: 100%; height: auto;"></video>
-</div>
-
+[![asciicast](https://asciinema.org/a/bFPewvgj4ilGI94NP5oxKWajT.svg)](https://asciinema.org/a/bFPewvgj4ilGI94NP5oxKWajT)
 
 ### Advanced Features
 
