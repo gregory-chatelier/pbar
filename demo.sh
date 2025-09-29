@@ -60,26 +60,26 @@ clear # Clear the terminal for a clean demo start
 
 
 # Conditional Metadata Display
-section_header "Conditional Metadata (All Shown by Default)"
-for i in $(seq 0 5 100); do
-  "$PBAR_BIN" "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# section_header "Conditional Metadata (All Shown by Default)"
+# for i in $(seq 0 5 100); do
+#   "$PBAR_BIN" "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-section_header "Conditional Metadata (Elapsed Hidden)"
-for i in $(seq 0 5 100); do
-  "$PBAR_BIN" --show-elapsed=false "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# section_header "Conditional Metadata (Elapsed Hidden)"
+# for i in $(seq 0 5 100); do
+#   "$PBAR_BIN" "$i" 100 --show-elapsed=false 
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
-section_header "Conditional Metadata (Throughput Hidden)"
-for i in $(seq 0 5 100); do
-  "$PBAR_BIN" --id="task1" --show-throughput=false "$i" 100
-  sleep "$DEMO_SPEED"
-done
-sleep 0.5
+# section_header "Conditional Metadata (Throughput Hidden)"
+# for i in $(seq 0 5 100); do
+#   "$PBAR_BIN" --id="task1" --show-throughput=false "$i" 100
+#   sleep "$DEMO_SPEED"
+# done
+# sleep 0.5
 
 # section_header "Conditional Metadata (ETA Hidden)"
 # for i in $(seq 0 5 100); do
@@ -88,12 +88,12 @@ sleep 0.5
 # done
 # sleep 0.5
 
-# section_header "Conditional Metadata (All Hidden)"
-# for i in $(seq 0 5 100); do
-#   "$PBAR_BIN" --show-elapsed=false --show-throughput=false --show-eta=false "$i" 100
-#   sleep "$DEMO_SPEED"
-# done
-# sleep 0.5
+section_header "Conditional Metadata (All Hidden)"
+for i in $(seq 0 5 100); do
+  "$PBAR_BIN" --show-elapsed=false --show-throughput=false --show-eta=false "$i" 100
+  sleep "$DEMO_SPEED"
+done
+sleep 0.5
 
 
 # # Default Spinner

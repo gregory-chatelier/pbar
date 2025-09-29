@@ -5,10 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
+
+	flag "github.com/spf13/pflag"
 	"strconv"
 	"strings"
 	"syscall"
@@ -41,37 +42,23 @@ func isValidStyle(style string) bool {
 }
 
 // generateInstanceID creates a stable ID for a progress bar instance.
-// It hashes relevant command-line arguments to ensure uniqueness across different logical bars,
+// It hashes relevant command-line flags to ensure uniqueness across different logical bars,
 // but stability across iterations of the same logical bar.
-func generateInstanceID(args []string, explicitID string) string {
-	var signatureParts []string
-
-	// Add explicit ID if provided
+func generateInstanceID(explicitID string) string {
 	if explicitID != "" {
-		signatureParts = append(signatureParts, explicitID)
+		return explicitID
 	}
 
-	// Add relevant flags to the signature. Exclude 'current' and 'total' as they change per iteration.
-	// Also exclude 'message' as it can change dynamically.
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-		if strings.HasPrefix(arg, "-") {
-			flagName := strings.TrimPrefix(strings.TrimPrefix(arg, "-"), "-")
-			if flagName != "current" && flagName != "total" && flagName != "message" {
-				signatureParts = append(signatureParts, arg)
-				if strings.Contains(arg, "=") { // Handle --flag=value
-					// Value is already part of arg
-				} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") { // Handle --flag value
-					signatureParts = append(signatureParts, args[i+1])
-					i++ // Skip next arg as it's the value
-				}
-			}
+	var signatureParts []string
+	flag.CommandLine.Visit(func(flag *flag.Flag) {
+		if flag.Name != "current" && flag.Name != "total" && flag.Name != "message" {
+			signatureParts = append(signatureParts, "--"+flag.Name, flag.Value.String())
 		}
-	}
+	})
 
 	// If no explicit ID and no relevant flags, use a default signature
 	if len(signatureParts) == 0 {
-		signatureParts = append(signatureParts, "default_pbar_instance")
+		return "default_pbar_instance"
 	}
 
 	// Combine parts and hash
@@ -110,48 +97,10 @@ func main() {
 	flag.BoolVar(&showETA, "show-eta", true, "Show estimated time remaining (default: true)")
 	flag.StringVar(&explicitInstanceID, "id", "", "Unique ID for the progress bar instance (optional)")
 
-	// Custom parsing to handle flags anywhere in the argument list
-	// Reorder arguments to put all flags first, then positional args
-	args := os.Args[1:]
-	var flags []string
-	var positionalArgs []string
-
-	// Separate flags from positional arguments
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-		if strings.HasPrefix(arg, "-") {
-			// Handle flags like --foo=bar
-			if strings.Contains(arg, "=") {
-				parts := strings.SplitN(arg, "=", 2)
-				flags = append(flags, parts[0], parts[1])
-				continue
-			}
-
-			flags = append(flags, arg)
-
-			// Check if next argument is a flag value (not starting with -)
-			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-				// Check if this flag expects a value
-				flagName := strings.TrimPrefix(strings.TrimPrefix(arg, "-"), "-")
-				if flag.Lookup(flagName) != nil && flag.Lookup(flagName).Value.String() != "true" && flag.Lookup(flagName).Value.String() != "false" {
-					i++                            // Move to flag value
-					flags = append(flags, args[i]) // Add flag value
-				}
-			}
-		} else {
-			// This is a positional argument
-			positionalArgs = append(positionalArgs, arg)
-		}
-	}
-
-	// Reconstruct os.Args with flags first, then positional args
-	newArgs := []string{os.Args[0]}
-	newArgs = append(newArgs, flags...)
-	newArgs = append(newArgs, positionalArgs...)
-	os.Args = newArgs
-
-	// Now parse flags normally
 	flag.Parse()
+
+	// Handle positional arguments for current and total
+	positionalArgs := flag.Args()
 
 	// If version flag is set, print version and exit
 	if version {
@@ -245,7 +194,7 @@ func main() {
 	colorBarCode := pbar.GetColorCode(colorBarName)
 	colorTextCode := pbar.GetColorCode(colorTextName)
 
-	instanceID := generateInstanceID(os.Args, explicitInstanceID)
+	instanceID := generateInstanceID(explicitInstanceID)
 
 	var bar *pbar.Bar
 	if current == 0 {
