@@ -100,11 +100,6 @@ type Bar struct {
 
 // Render generates the string representation of the progress bar.
 func (b *Bar) Render() string {
-	// On the first render, add a small delay to allow for throughput and ETA calculation
-	if b.LastUpdateTime.IsZero() {
-		time.Sleep(10 * time.Millisecond)
-	}
-
 	// Ensure Total is not negative
 	if b.Total < 0 {
 		b.Total = 0
@@ -142,7 +137,12 @@ func (b *Bar) Render() string {
 		isIndeterminate := b.Style == "spinner" || b.Style == "braille-spinner"
 		if !isIndeterminate && elapsedTime.Seconds() > 0 {
 			deltaCurrent := b.Current - b.PreviousCurrent
-			deltaTime := time.Since(b.LastUpdateTime).Seconds()
+
+			var deltaTime float64
+			if !b.LastUpdateTime.IsZero() {
+				deltaTime = time.Since(b.LastUpdateTime).Seconds()
+			}
+
 			var currentThroughput float64
 			if deltaTime > 0 {
 				currentThroughput = float64(deltaCurrent) / deltaTime
@@ -284,6 +284,7 @@ func (b *Bar) Render() string {
 	// Add carriage return for inline updates
 	result = "\r" + result + "\x1b[K"
 
+	b.LastUpdateTime = time.Now()
 	return result
 }
 

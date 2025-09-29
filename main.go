@@ -231,7 +231,6 @@ func main() {
 	if bar.Finished {
 		pbar.DeleteState(instanceID)
 	} else {
-		bar.LastUpdateTime = time.Now()
 		pbar.SaveState(bar, instanceID)
 	}
 
