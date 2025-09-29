@@ -42,7 +42,7 @@ bash demo.sh
 
 **Note on Windows Compatibility:** The `demo.sh` script is designed for Unix-like environments (Linux, macOS, WSL, Git Bash). If you are running Git Bash on Windows and encounter `command not found` errors for `pbar.exe`, you might need to adjust your environment. Potential workarounds include:
 
-*   Adding the current directory to your `PATH` temporarily: `export PATH=$PATH:.
+*   Adding the current directory to your `PATH` temporarily: `export PATH=$PATH:.`
 *   Using `winpty` for individual `pbar` calls if your terminal supports it (e.g., `winpty ./pbar.exe 50 100`).
 
 ## Installation
