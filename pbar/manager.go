@@ -52,6 +52,7 @@ func (m *Manager) UpdateBar(update Update) {
 			ShowElapsed:    true,
 			ShowThroughput: true,
 			ShowETA:        true,
+			Managed:        true,
 		}
 		m.bars[update.ID] = bar
 		m.order = append(m.order, update.ID)
@@ -98,8 +99,17 @@ func (m *Manager) RenderAll() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	// Clear previous output
-	m.clearLines()
+	var sb strings.Builder
+
+	// Clear previous output (inlined clearLines logic)
+	if m.lastLines > 0 {
+		for i := 0; i < m.lastLines; i++ {
+			sb.WriteString("\r\033[K") // Carriage return, clear to end of line
+			if i < m.lastLines-1 {
+				sb.WriteString("\033[A") // Move up one line
+			}
+		}
+	}
 
 	var outputLines []string
 	for _, id := range m.order {
@@ -108,7 +118,8 @@ func (m *Manager) RenderAll() {
 	}
 
 	// Print new output
-	fmt.Print(strings.Join(outputLines, "\n"))
+	sb.WriteString(strings.Join(outputLines, "\n"))
+	fmt.Print(sb.String())
 	m.lastLines = len(outputLines)
 }
 
@@ -116,11 +127,7 @@ func (m *Manager) RenderAll() {
 func (m *Manager) Clear() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.clearLines()
-}
-
-// clearLines moves the cursor up and clears the lines.
-func (m *Manager) clearLines() {
+	// Clear previous output (inlined clearLines logic)
 	if m.lastLines > 0 {
 		for i := 0; i < m.lastLines; i++ {
 			fmt.Print("\r\033[K") // Carriage return, clear to end of line
@@ -129,4 +136,6 @@ func (m *Manager) clearLines() {
 			}
 		}
 	}
+	// Reset lastLines after clearing
+	m.lastLines = 0
 }

@@ -96,6 +96,7 @@ type Bar struct {
 	ShowETA           bool      `json:"show_eta"`
 	SpinnerState      int       `json:"spinner_state"`
 	TestMode          bool      `json:"-"` // Not serialized
+	Managed           bool      `json:"-"` // True if the bar is managed by a Manager
 }
 
 // Render generates the string representation of the progress bar.
@@ -281,8 +282,10 @@ func (b *Bar) Render() string {
 
 	result := fmt.Sprintf("%s %s%s", barString, percentString, metadataString)
 
-	// Add carriage return for inline updates
-	result = "\r" + result + "\x1b[K"
+	if !b.Managed {
+		// Add carriage return for inline updates
+		result = "\r" + result + "\x1b[K"
+	}
 
 	b.LastUpdateTime = time.Now()
 	return result
