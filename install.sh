@@ -2,11 +2,11 @@
 
 # This script downloads and installs the latest version of the 'pbar' tool.
 # It is designed to be run via curl:
-#   curl -sSfL https://raw.githubusercontent.com/gregory-chatelier/pbar/install.sh | sh
+#   curl -sSfL https://raw.githubusercontent.com/gregory-chatelier/pbar/main/install.sh | sh
 #
 # To specify a custom installation directory, set the INSTALL_DIR environment variable
 # for the 'sh' command:
-#   curl -sSfL https://raw.githubusercontent.com/gregory-chatelier/pbar/install.sh | INSTALL_DIR=~/my-bin sh
+#   curl -sSfL https://raw.githubusercontent.com/gregory-chatelier/pbar/main/install.sh | INSTALL_DIR=~/my-bin sh
 
 set -e
 
